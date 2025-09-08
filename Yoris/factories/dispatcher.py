@@ -2,7 +2,7 @@ import aiogram
 from aiogram.enums import ContentType
 
 from factories.commands.factory import CommandFactory
-from factory import MiddlewareFactory
+from factories.middlewares.factory import MiddlewareFactory
 
 
 class Dispatcher:

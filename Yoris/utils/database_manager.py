@@ -187,3 +187,21 @@ def get_chat_member(username_id: str | int):
     q |= Q(user__username=username_id)
     return yoris_models.ChatMember.objects.select_related("user", "chat", "spouse", "clan", "main_club").filter(q).first()
 
+
+@sync_to_async
+def get_chat(username_id: str | int):
+    q = Q()
+    if isinstance(username_id, int) or (isinstance(username_id, str) and username_id.isdigit()):
+        q |= Q(id=username_id)
+    q |= Q(username=username_id)
+    return yoris_models.Chat.objects.filter(q).first()
+
+
+@sync_to_async
+def get_user(username_id: str | int):
+    q = Q()
+    if isinstance(username_id, int) or (isinstance(username_id, str) and username_id.isdigit()):
+        q |= Q(id=username_id)
+    q |= Q(username=username_id)
+    print(q)
+    return yoris_models.User.objects.filter(q).first()

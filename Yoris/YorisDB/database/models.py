@@ -14,7 +14,7 @@ class Chat(models.Model):
         ("ru", "Russian"),
     )
     id = models.BigAutoField(primary_key=True)
-    name = models.CharField(max_length=100)
+    chat_name = models.CharField(max_length=100, db_column="name")
     username = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     welcome_message = models.TextField(null=True, blank=True)
@@ -22,6 +22,14 @@ class Chat(models.Model):
     type = models.CharField(max_length=100, choices=TYPE_CHOICES, default="group")
     lang = models.CharField(max_length=100, choices=LANG_CHOICES, default="ru")
     is_short_info_enabled = models.BooleanField(default=False)
+
+    @property
+    def name(self):
+        if self.chat_name:
+            return self.chat_name
+        if self.username:
+            return self.username
+        return self.pk
 
 
 class User(models.Model):
@@ -39,6 +47,15 @@ class User(models.Model):
     chips_balance = models.IntegerField(default=0)
     mode = models.CharField(max_length=5, choices=MODE_CHOICES, default="yoris")
 
+    @property
+    def name(self):
+        if self.first_name:
+            if self.last_name:
+                return f"{self.first_name} {self.last_name}"
+            return f"{self.first_name}"
+        if self.username:
+            return f"{self.username}"
+        return self.pk
 
 class ChatMember(models.Model):
     STATUS_CHOICES = (
@@ -67,6 +84,10 @@ class ChatMember(models.Model):
 
     class Meta:
         unique_together = ("user", "chat")
+
+    @property
+    def name(self):
+        return f'Участник {self.user.name} чата {self.chat.name}'
 
 
 class Warnings(models.Model):

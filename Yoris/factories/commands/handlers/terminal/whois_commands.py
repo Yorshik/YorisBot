@@ -40,3 +40,33 @@ class WhoIsCommand(CommandBase):
 
     async def execute(self, msg: aiogram.types.Message):
         await msg.reply(f"Йоу, это упрощенное 'кто ты'. Посмотрим...\nid - {self.user.user.id}\nusername - {self.user.user.username}\n first name - {self.user.user.first_name}\nlast name - {self.user.user.last_name}")
+
+
+class WhatIsCommand(CommandBase):
+    def __init__(self):
+        self.chat = None
+
+    async def matches(self, msg: aiogram.types.Message):
+        text = msg.text
+        if not text.startswith("what-is"):
+            return False
+        args_str = text[len("what-is"):].strip()
+        parser = argparse.ArgumentParser(prog="what-is", add_help=False)
+        parser.add_argument("-chat")
+        parser.add_argument("--this", action="store_true")
+        try:
+            parsed = parser.parse_args(shlex.split(args_str))
+        except SystemExit:
+            return False
+        if not any([parsed.chat, parsed.this]) or all([parsed.chat, parsed.this]):
+            return False
+        if parsed.chat:
+            extracted_chat = await parse_message.extract_chat(msg)
+            chat = await database_manager.get_chat(extracted_chat)
+        else:
+            chat = await database_manager.get_chat(msg.chat.id)
+        self.chat = chat
+        return True
+
+    async def execute(self, msg: aiogram.types.Message):
+        await msg.reply(f"Йоу, это упрощенное 'чат инфо'. Посмотрим...\nid - {self.chat.id}\nusername - {self.chat.username}\nname - {self.chat.chat_name}")
