@@ -57,7 +57,6 @@ class ChatMember(models.Model):
     tg_admin_title = models.CharField(max_length=30, null=True, blank=True)
     is_citizen = models.BooleanField(default=False)
     spouse = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True)
-    role_title =  models.CharField(max_length=100)
     role_level = models.IntegerField(default=0)
     clan = models.ForeignKey("Clan", on_delete=models.SET_NULL, null=True, blank=True)
     main_club = models.ForeignKey("Club", on_delete=models.SET_NULL, null=True, blank=True)

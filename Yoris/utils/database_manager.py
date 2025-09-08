@@ -1,4 +1,6 @@
 import decouple
+from django.db.models import Q
+
 import YorisDB.database.models as yoris_models
 from aiogram.types import Message
 from asgiref.sync import sync_to_async
@@ -43,7 +45,7 @@ def update_chat(msg: Message):
     key = f"chat:{chat_id}"
 
     updated = {
-        "chat_id": chat_id,
+        "id": chat_id,
         "name": msg.chat.title,
         "username": msg.chat.username,
         "type": msg.chat.type,
@@ -82,7 +84,7 @@ def update_user(msg: Message):
     key = f"user:{user_id}"
 
     updated = {
-        "user_id": user_id,
+        "id": user_id,
         "first_name": msg.from_user.first_name,
         "last_name": msg.from_user.last_name,
         "username": msg.from_user.username,
@@ -175,3 +177,13 @@ def add_stats(msg: Message):
         chat=chat_member.chat,
         user=chat_member.user,
     )
+
+
+@sync_to_async
+def get_chat_member(username_id: str | int):
+    q = Q()
+    if isinstance(username_id, int) or (isinstance(username_id, str) and username_id.isdigit()):
+        q |= Q(user_id=int(username_id))
+    q |= Q(user__username=username_id)
+    return yoris_models.ChatMember.objects.select_related("user", "chat", "spouse", "clan", "main_club").filter(q).first()
+
