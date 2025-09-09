@@ -1,7 +1,8 @@
 import argparse
+import datetime
 
 import aiogram
-from aiogram.types import InputFile, FSInputFile, BufferedInputFile
+from aiogram.types import BufferedInputFile
 import shlex
 import database_manager
 import graphics
@@ -19,17 +20,29 @@ class MyStats(CommandBase):
             return False
         args_str = text[len("my-stats"):].strip()
         parser = argparse.ArgumentParser()
-        parser.add_argument('days', type=int)
+        parser.add_argument('-days', type=int)
+        parser.add_argument('-weeks', type=int)
+        parser.add_argument('-months', type=int)
+        parser.add_argument("--all", action="store_true")
         try:
             parsed_args = parser.parse_args(shlex.split(args_str))
         except SystemExit:
             return False
-        days = 7
-        if parsed_args.days:
-            days = parsed_args.days
-        self.days = days
         self.user = await database_manager.get_user(msg.from_user.id)
         self.chat = await database_manager.get_chat(msg.chat.id)
+        if parsed_args.all:
+            days = (datetime.date.today() - self.user.created_at.date()).days
+        else:
+            days = 0
+            if parsed_args.days:
+                days += parsed_args.days
+            if parsed_args.weeks:
+                days += parsed_args.weeks * 7
+            if parsed_args.months:
+                days += parsed_args.months * 30
+        if not days:
+            days = 7
+        self.days = days
         return True
 
     async def execute(self, msg: aiogram.types.Message):

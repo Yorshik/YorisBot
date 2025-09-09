@@ -15,6 +15,6 @@ class MiddlewareFactory(Factory):
     def register(self, middleware: Type[MiddlewareBase]):
         self._middlewares.append(middleware())
 
-    async def process(self, msg: aiogram.types.Message, bot: aiogram.Bot):
+    async def process(self, msg: aiogram.types.Message):
         for middleware in self._middlewares:
-            await middleware.process(msg, bot)
+            await middleware.process(msg)

@@ -16,7 +16,7 @@ factory_dispatcher = dispatcher.Dispatcher()
 
 @dp.message()
 async def universal_handler(message: types.Message):
-    await factory_dispatcher.dispatch(message, bot)
+    await factory_dispatcher.dispatch(message)
 
 
 async def main():

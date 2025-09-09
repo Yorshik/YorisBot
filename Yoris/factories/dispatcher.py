@@ -10,8 +10,8 @@ class Dispatcher:
         self.command_factory = CommandFactory()
         self.middleware_factory = MiddlewareFactory()
 
-    async def dispatch(self, message: aiogram.types.Message, bot: aiogram.Bot):
-        await self.middleware_factory.process(message, bot)
+    async def dispatch(self, message: aiogram.types.Message):
+        await self.middleware_factory.process(message)
 
         if message.content_type == ContentType.TEXT:
             await self.command_factory.handle(message)

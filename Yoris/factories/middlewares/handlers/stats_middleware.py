@@ -5,5 +5,5 @@ from utils import database_manager
 
 
 class StatsMiddleware(MiddlewareBase):
-    async def process(self, msg: aiogram.types.Message, bot: aiogram.Bot):
+    async def process(self, msg: aiogram.types.Message):
         await database_manager.add_stats(msg)

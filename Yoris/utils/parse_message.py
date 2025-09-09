@@ -10,6 +10,7 @@ async def extract_user(msg: aiogram.types.Message):
                 return ent.user.id
             if ent.type == "mention":
                 username = msg.text[ent.offset: ent.offset + ent.length]
+                print(username)
                 return username[1:]
     match = re.search(r"@(\d+)", msg.text)
     if match:

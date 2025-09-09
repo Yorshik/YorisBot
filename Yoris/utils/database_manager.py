@@ -158,7 +158,7 @@ def update_chat_member(msg: Message, chat_member):
         if need_update:
             yoris_models.ChatMember.objects.filter(user_id=user_id, chat_id=chat_id).update(
                 is_tg_admin=updated["is_tg_admin"],
-                admin_name=updated["tg_admin_title"],
+                tg_admin_title=updated["tg_admin_title"],
                 status=updated["status"],
             )
             cached.update({
