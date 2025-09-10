@@ -205,3 +205,39 @@ def get_user(username_id: str | int):
     q |= Q(username=username_id)
     print(q)
     return yoris_models.User.objects.filter(q).first()
+
+
+@sync_to_async
+def set_mute_period(chat: yoris_models.Chat, period: int):
+    chat.mute_period = period
+    chat.save()
+
+
+@sync_to_async
+def get_mute_period(chat: yoris_models.Chat):
+    return chat.mute_period
+
+
+@sync_to_async
+def create_mute(chat, user, author, until_date):
+    yoris_models.Mute.objects.create(
+        chat=chat,
+        user=user,
+        author=author,
+        until_date=until_date,
+    )
+
+
+@sync_to_async
+def delete_mute(chat: yoris_models.Chat, user):
+    yoris_models.Mute.objects.filter(chat=chat, user=user).delete()
+
+
+@sync_to_async
+def get_mute(chat: yoris_models.Chat, user):
+    return yoris_models.Mute.objects.filter(chat=chat, user=user).first()
+
+
+@sync_to_async
+def get_mutes(chat: yoris_models.Chat):
+    return list(yoris_models.Mute.objects.select_related("user", "author").filter(chat=chat))

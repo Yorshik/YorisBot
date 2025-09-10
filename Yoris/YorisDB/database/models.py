@@ -22,6 +22,7 @@ class Chat(models.Model):
     type = models.CharField(max_length=100, choices=TYPE_CHOICES, default="group")
     lang = models.CharField(max_length=100, choices=LANG_CHOICES, default="ru")
     is_short_info_enabled = models.BooleanField(default=False)
+    mute_period = models.IntegerField(default=60)
 
     @property
     def name(self):
@@ -56,6 +57,12 @@ class User(models.Model):
         if self.username:
             return f"{self.username}"
         return self.pk
+
+    @property
+    def link(self):
+        if self.username:
+            return "https://t.me/" + self.username
+        return "tg://openmessage?user_id=" + str(self.id)
 
 class ChatMember(models.Model):
     STATUS_CHOICES = (
@@ -239,3 +246,10 @@ class Activity(models.Model):
     chat = models.ForeignKey("Chat", on_delete=models.SET_NULL, null=True, blank=True)
     member = models.ForeignKey("ChatMember", on_delete=models.SET_NULL, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+
+class Mute(models.Model):
+    chat = models.ForeignKey("Chat", on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True)
+    until_date = models.DateTimeField(null=True, blank=True)
+    author = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
