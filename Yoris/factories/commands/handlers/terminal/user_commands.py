@@ -1,13 +1,11 @@
 import argparse
 import datetime
+import shlex
 
 import aiogram
 from aiogram.types import BufferedInputFile
-import shlex
-import database_manager
-import graphics
 from factories.commands.base import CommandBase
-
+from utils import database_manager, graphics
 
 class MyStats(CommandBase):
     def __init__(self):
@@ -16,13 +14,13 @@ class MyStats(CommandBase):
 
     async def matches(self, msg: aiogram.types.Message) -> bool:
         text = msg.text
-        if not text.startswith('my-stats'):
+        if not text.startswith("my-stats"):
             return False
-        args_str = text[len("my-stats"):].strip()
+        args_str = text[len("my-stats") :].strip()
         parser = argparse.ArgumentParser()
-        parser.add_argument('-days', type=int)
-        parser.add_argument('-weeks', type=int)
-        parser.add_argument('-months', type=int)
+        parser.add_argument("-days", type=int)
+        parser.add_argument("-weeks", type=int)
+        parser.add_argument("-months", type=int)
         parser.add_argument("--all", action="store_true")
         try:
             parsed_args = parser.parse_args(shlex.split(args_str))

@@ -2,10 +2,8 @@ import argparse
 import shlex
 
 import aiogram
-
-import parse_message
-from factories.commands.base import  CommandBase
-from utils import database_manager
+from factories.commands.base import CommandBase
+from utils import database_manager, parse_message
 
 
 class WhoIsCommand(CommandBase):
@@ -17,7 +15,7 @@ class WhoIsCommand(CommandBase):
         if not text.startswith("who-is"):
             return False
 
-        args_str = text[len("who-is"):].strip()
+        args_str = text[len("who-is") :].strip()
 
         parser = argparse.ArgumentParser(prog="who-is", add_help=False)
         parser.add_argument("-user")
@@ -39,7 +37,11 @@ class WhoIsCommand(CommandBase):
         return True
 
     async def execute(self, msg: aiogram.types.Message):
-        await msg.reply(f"Йоу, это упрощенное 'кто ты'. Посмотрим...\nid - {self.user.user.id}\nusername - {self.user.user.username}\n first name - {self.user.user.first_name}\nlast name - {self.user.user.last_name}")
+        await msg.reply(
+            "Йоу, это упрощенное 'кто ты'. Посмотрим...\nid -"
+            f" {self.user.user.id}\nusername - {self.user.user.username}\n first name -"
+            f" {self.user.user.first_name}\nlast name - {self.user.user.last_name}"
+        )
 
 
 class WhatIsCommand(CommandBase):
@@ -50,7 +52,7 @@ class WhatIsCommand(CommandBase):
         text = msg.text
         if not text.startswith("what-is"):
             return False
-        args_str = text[len("what-is"):].strip()
+        args_str = text[len("what-is") :].strip()
         parser = argparse.ArgumentParser(prog="what-is", add_help=False)
         parser.add_argument("-chat")
         parser.add_argument("--this", action="store_true")
@@ -69,4 +71,8 @@ class WhatIsCommand(CommandBase):
         return True
 
     async def execute(self, msg: aiogram.types.Message):
-        await msg.reply(f"Йоу, это упрощенное 'чат инфо'. Посмотрим...\nid - {self.chat.id}\nusername - {self.chat.username}\nname - {self.chat.chat_name}")
+        await msg.reply(
+            "Йоу, это упрощенное 'чат инфо'. Посмотрим...\nid -"
+            f" {self.chat.id}\nusername - {self.chat.username}\nname -"
+            f" {self.chat.chat_name}"
+        )

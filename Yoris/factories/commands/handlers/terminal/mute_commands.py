@@ -5,7 +5,7 @@ import shlex
 import aiogram
 from aiogram.types import ChatPermissions
 from aiogram.types import MessageEntity
-import parse_message
+import utils.parse_message
 from factories.commands.base import CommandBase
 from utils import database_manager
 from core.bot import bot
