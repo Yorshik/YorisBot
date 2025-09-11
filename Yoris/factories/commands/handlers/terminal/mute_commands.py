@@ -193,6 +193,8 @@ class MuteListCommand(CommandBase):
             text += f"{mute.user.name} is muted\n"
             text += f"Expires in {int((mute.until_date - datetime.datetime.now()).total_seconds() / 60)} minutes\n"
             text += f"Muted by {mute.author.name}\n"
+            if mute.reason:
+                text += f"Reason: {mute.reason}\n"
             text += f"\n"
         await msg.reply(text)
 
@@ -217,7 +219,7 @@ class MuteCheckCommand(CommandBase):
             return False
         extracted_user = await parse_message.extract_user(msg)
         user = await database_manager.get_user(extracted_user)
-        chat = await database_manager.get_chat(extracted_user)
+        chat = await database_manager.get_chat(msg.chat.id)
         self.user = user
         self.chat = chat
         return True

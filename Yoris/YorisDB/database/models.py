@@ -24,7 +24,7 @@ class Chat(models.Model):
     is_short_info_enabled = models.BooleanField(default=False)
     mute_period = models.IntegerField(default=60)
     warn_period = models.IntegerField(default=60 * 24 * 7)
-    warn_to_ban = models.IntegerField(default=3)
+    warn_limit = models.IntegerField(default=3)
 
     @property
     def name(self):
@@ -254,6 +254,7 @@ class Mute(models.Model):
 
 
 class Warn(models.Model):
+    warn_id = models.IntegerField()
     chat = models.ForeignKey("Chat", on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True)
     until_date = models.DateTimeField(null=True, blank=True)

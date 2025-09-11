@@ -20,11 +20,13 @@ async def universal_handler(message: types.Message):
 
 
 async def on_startup():
+    print("started up")
     asyncio.create_task(start_scheduler())
 
 
 async def main():
-    await dp.start_polling(bot, on_startup=on_startup)
+    dp.startup.register(on_startup)
+    await dp.start_polling(bot)
 
 
 if __name__ == '__main__':
