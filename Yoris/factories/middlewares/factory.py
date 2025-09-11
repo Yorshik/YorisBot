@@ -1,9 +1,9 @@
 import aiogram
 from typing import Type
 from factories.middlewares.base import MiddlewareBase
-from factory_base import Factory
-from stats_middleware import StatsMiddleware
-from update_middleware import UpdateMiddleware
+from factories.factory_base import Factory
+from factories.middlewares.handlers.stats_middleware import StatsMiddleware
+from factories.middlewares.handlers.update_middleware import UpdateMiddleware
 
 
 class MiddlewareFactory(Factory):

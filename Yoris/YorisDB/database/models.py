@@ -23,6 +23,8 @@ class Chat(models.Model):
     lang = models.CharField(max_length=100, choices=LANG_CHOICES, default="ru")
     is_short_info_enabled = models.BooleanField(default=False)
     mute_period = models.IntegerField(default=60)
+    warn_period = models.IntegerField(default=60 * 24 * 7)
+    warn_to_ban = models.IntegerField(default=3)
 
     @property
     def name(self):
@@ -95,13 +97,6 @@ class ChatMember(models.Model):
     @property
     def name(self):
         return f'Участник {self.user.name} чата {self.chat.name}'
-
-
-class Warnings(models.Model):
-    user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="warnings")
-    created_at = models.DateTimeField(auto_now_add=True)
-    by = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="given_warnings")
-    reason = models.TextField()
 
 
 class Credits(models.Model):
@@ -253,3 +248,14 @@ class Mute(models.Model):
     user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True)
     until_date = models.DateTimeField(null=True, blank=True)
     author = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    reason = models.TextField(null=True, blank=True)
+    was_admin = models.BooleanField(default=False)
+    tg_admin_title = models.CharField(max_length=255, blank=True, null=True)
+
+
+class Warn(models.Model):
+    chat = models.ForeignKey("Chat", on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True)
+    until_date = models.DateTimeField(null=True, blank=True)
+    author = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    reason = models.TextField(blank=True, null=True)

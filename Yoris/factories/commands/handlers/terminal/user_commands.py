@@ -4,8 +4,8 @@ import datetime
 import aiogram
 from aiogram.types import BufferedInputFile
 import shlex
-import database_manager
-import graphics
+from utils import database_manager
+from utils import graphics
 from factories.commands.base import CommandBase
 
 

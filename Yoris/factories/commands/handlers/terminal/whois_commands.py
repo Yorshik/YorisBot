@@ -3,7 +3,7 @@ import shlex
 
 import aiogram
 
-import parse_message
+from utils import parse_message
 from factories.commands.base import  CommandBase
 from utils import database_manager
 

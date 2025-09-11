@@ -2,7 +2,7 @@ import aiogram
 from typing import Type
 from factories.commands.base import CommandBase
 
-from factory_base import Factory
+from factories.factory_base import Factory
 
 
 class CommandFactory(Factory):

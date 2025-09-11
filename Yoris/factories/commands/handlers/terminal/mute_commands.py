@@ -5,7 +5,7 @@ import shlex
 import aiogram
 from aiogram.types import ChatPermissions
 from aiogram.types import MessageEntity
-import parse_message
+from utils import parse_message
 from factories.commands.base import CommandBase
 from utils import database_manager
 from core.bot import bot
@@ -19,6 +19,8 @@ class MuteCommand(CommandBase):
         self.period = None
         self.force = None
         self.reason = None
+        self.was_admin = None
+        self.tg_admin_title = None
 
     async def matches(self, msg: aiogram.types.Message) -> bool:
         text = msg.text
@@ -59,6 +61,9 @@ class MuteCommand(CommandBase):
         self.force = parsed.force
         self.reason = parsed.reason
         self.period = period
+        member = await bot.get_chat_member(msg.chat.id, msg.from_user.id)
+        self.was_admin = member.status in ("administrator", "creator")
+        self.tg_admin_title = member.custom_title or ""
         return True
 
     async def execute(self, msg: aiogram.types.Message):
@@ -81,7 +86,15 @@ class MuteCommand(CommandBase):
             can_pin_messages=False
         )
         await bot.restrict_chat_member(self.chat.id, self.user.id, permissions=permissions, until_date=until_date)
-        await database_manager.create_mute(self.chat, self.user, self.author, until_date)
+        await database_manager.create_mute(
+            chat=self.chat,
+            user=self.user,
+            until_date=until_date,
+            reason=self.reason,
+            force=self.force,
+            was_admin=self.was_admin,
+            tg_admin_title=self.tg_admin_title
+        )
 
 
 class UnMuteCommand(CommandBase):
@@ -164,10 +177,10 @@ class MutePeriodCommand(CommandBase):
         await msg.reply("New default mute period: {} minutes".format(self.period))
 
 
-class MutesCommand(CommandBase):
+class MuteListCommand(CommandBase):
     async def matches(self, msg: aiogram.types.Message) -> bool:
         text = msg.text
-        return text.startswith('mutes')
+        return text == 'mute-list'
 
     async def execute(self, msg: aiogram.types.Message):
         chat = await database_manager.get_chat(msg.chat.id)
@@ -218,8 +231,7 @@ class MuteCheckCommand(CommandBase):
                     type="text_link",
                     offset=0,
                     length=len(self.user.name),
-                    url=self.user.link,
-                    disable_web_page_preview=True
+                    url=self.user.link
                 )
             ]
             await msg.reply(text, entities=entities)

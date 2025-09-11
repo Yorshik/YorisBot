@@ -219,12 +219,31 @@ def get_mute_period(chat: yoris_models.Chat):
 
 
 @sync_to_async
-def create_mute(chat, user, author, until_date):
+def get_warn_period(chat: yoris_models.Chat):
+    return chat.warn_period
+
+
+@sync_to_async
+def create_mute(chat, user, author, until_date, reason, was_admin, tg_admin_title):
     yoris_models.Mute.objects.create(
         chat=chat,
         user=user,
         author=author,
         until_date=until_date,
+        reason=reason,
+        was_admin=was_admin,
+        tg_admin_title=tg_admin_title,
+    )
+
+
+@sync_to_async
+def create_warn(chat, author, user, until_date, reason):
+    yoris_models.Warn.objects.create(
+        chat=chat,
+        author=author,
+        user=user,
+        until_date=until_date,
+        reason=reason,
     )
 
 
@@ -241,3 +260,8 @@ def get_mute(chat: yoris_models.Chat, user):
 @sync_to_async
 def get_mutes(chat: yoris_models.Chat):
     return list(yoris_models.Mute.objects.select_related("user", "author").filter(chat=chat))
+
+
+@sync_to_async
+def get_user_warn_count(user: yoris_models.User):
+    return yoris_models.Warn.objects.filter(user=user).count()
