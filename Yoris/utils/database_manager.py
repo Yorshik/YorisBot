@@ -1,13 +1,14 @@
-import decouple
-from django.db.models import Q
-
 import YorisDB.database.models as yoris_models
+import aiogram
 from aiogram.types import Message
 from asgiref.sync import sync_to_async
+import decouple
 from django.core.cache import cache
+from django.db.models import Q
 from django.forms.models import model_to_dict
 
 CACHE_TIMEOUT = decouple.config("CACHE_TIMEOUT", cast=int, default=3600)
+
 
 @sync_to_async
 def get_prefixes(chat_id):
@@ -15,7 +16,11 @@ def get_prefixes(chat_id):
     prefixes = cache.get(key)
     if prefixes is not None:
         return prefixes
-    prefixes = list(yoris_models.Prefix.objects.filter(chat_id=chat_id).values_list('name', flat=True))
+    prefixes = list(
+        yoris_models.Prefix.objects.filter(chat_id=chat_id).values_list(
+            "name", flat=True
+        )
+    )
     cache.set(key, prefixes, CACHE_TIMEOUT)
     return prefixes
 
@@ -121,7 +126,6 @@ def update_user(msg: Message):
     cache.set(key, cached, CACHE_TIMEOUT)
 
 
-
 @sync_to_async
 def update_chat_member(msg: Message, chat_member):
     chat_id = msg.chat.id
@@ -143,7 +147,9 @@ def update_chat_member(msg: Message, chat_member):
     }
     cached = cache.get(key)
     if not cached:
-        cm_obj = yoris_models.ChatMember.objects.filter(user_id=user_id, chat_id=chat_id).first()
+        cm_obj = yoris_models.ChatMember.objects.filter(
+            user_id=user_id, chat_id=chat_id
+        ).first()
         if cm_obj:
             cached = model_to_dict(cm_obj)
         else:
@@ -156,22 +162,28 @@ def update_chat_member(msg: Message, chat_member):
                 need_update = True
                 break
         if need_update:
-            yoris_models.ChatMember.objects.filter(user_id=user_id, chat_id=chat_id).update(
+            yoris_models.ChatMember.objects.filter(
+                user_id=user_id, chat_id=chat_id
+            ).update(
                 is_tg_admin=updated["is_tg_admin"],
                 tg_admin_title=updated["tg_admin_title"],
                 status=updated["status"],
             )
-            cached.update({
-                "is_tg_admin": updated["is_tg_admin"],
-                "tg_admin_title": updated["tg_admin_title"],
-                "status": updated["status"],
-            })
+            cached.update(
+                {
+                    "is_tg_admin": updated["is_tg_admin"],
+                    "tg_admin_title": updated["tg_admin_title"],
+                    "status": updated["status"],
+                }
+            )
     cache.set(key, cached, CACHE_TIMEOUT)
 
 
 @sync_to_async
 def add_stats(msg: Message):
-    chat_member = yoris_models.ChatMember.objects.get(chat_id=msg.chat.id, user_id=msg.from_user.id)
+    chat_member = yoris_models.ChatMember.objects.get(
+        chat_id=msg.chat.id, user_id=msg.from_user.id
+    )
     return yoris_models.Activity.objects.create(
         member=chat_member,
         chat=chat_member.chat,
@@ -182,16 +194,26 @@ def add_stats(msg: Message):
 @sync_to_async
 def get_chat_member(username_id: str | int):
     q = Q()
-    if isinstance(username_id, int) or (isinstance(username_id, str) and username_id.isdigit()):
+    if isinstance(username_id, int) or (
+        isinstance(username_id, str) and username_id.isdigit()
+    ):
         q |= Q(user_id=int(username_id))
     q |= Q(user__username=username_id)
-    return yoris_models.ChatMember.objects.select_related("user", "chat", "spouse", "clan", "main_club").filter(q).first()
+    return (
+        yoris_models.ChatMember.objects.select_related(
+            "user", "chat", "spouse", "clan", "main_club"
+        )
+        .filter(q)
+        .first()
+    )
 
 
 @sync_to_async
 def get_chat(username_id: str | int):
     q = Q()
-    if isinstance(username_id, int) or (isinstance(username_id, str) and username_id.isdigit()):
+    if isinstance(username_id, int) or (
+        isinstance(username_id, str) and username_id.isdigit()
+    ):
         q |= Q(id=username_id)
     q |= Q(username=username_id)
     return yoris_models.Chat.objects.filter(q).first()
@@ -200,7 +222,9 @@ def get_chat(username_id: str | int):
 @sync_to_async
 def get_user(username_id: str | int):
     q = Q()
-    if isinstance(username_id, int) or (isinstance(username_id, str) and username_id.isdigit()):
+    if isinstance(username_id, int) or (
+        isinstance(username_id, str) and username_id.isdigit()
+    ):
         q |= Q(id=username_id)
     q |= Q(username=username_id)
     print(q)
@@ -259,9 +283,22 @@ def get_mute(chat: yoris_models.Chat, user):
 
 @sync_to_async
 def get_mutes(chat: yoris_models.Chat):
-    return list(yoris_models.Mute.objects.select_related("user", "author").filter(chat=chat))
+    return list(
+        yoris_models.Mute.objects.select_related("user", "author").filter(chat=chat)
+    )
 
 
 @sync_to_async
 def get_user_warn_count(user: yoris_models.User):
     return yoris_models.Warn.objects.filter(user=user).count()
+
+
+@sync_to_async
+def text_trigger(chat: yoris_models.Chat, text: str, answer: str):
+    yoris_models.TextTrigger.objects.create(chat=chat, text=text, answer=answer)
+    print("Created a trigger")
+
+
+@sync_to_async
+def get_text_triggers(chat: yoris_models.Chat):
+    return list(yoris_models.TextTrigger.objects.filter(chat=chat))

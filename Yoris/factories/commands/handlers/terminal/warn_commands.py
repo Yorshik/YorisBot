@@ -1,12 +1,11 @@
 import argparse
-import shlex
 import datetime
+import shlex
 
 import aiogram
-
-import database_manager
-import parse_message
 from factories.commands.base import CommandBase
+import utils.database_manager
+import utils.parse_message
 
 
 class WarnCommand(CommandBase):
@@ -19,17 +18,17 @@ class WarnCommand(CommandBase):
 
     async def matches(self, msg: aiogram.types.Message) -> bool:
         text = msg.text
-        if not text.startswith('warn'):
+        if not text.startswith("warn"):
             return False
-        args_str = text[len('warn'):].strip()
-        parser = argparse.ArgumentParser(prog='warn', add_help=False)
-        parser.add_argument('-user', required=True)
-        parser.add_argument('-reason')
-        parser.add_argument('-minutes', type=int)
-        parser.add_argument('-hours', type=int)
-        parser.add_argument('-days', type=int)
-        parser.add_argument('-weeks', type=int)
-        parser.add_argument('-months', type=int)
+        args_str = text[len("warn") :].strip()
+        parser = argparse.ArgumentParser(prog="warn", add_help=False)
+        parser.add_argument("-user", required=True)
+        parser.add_argument("-reason")
+        parser.add_argument("-minutes", type=int)
+        parser.add_argument("-hours", type=int)
+        parser.add_argument("-days", type=int)
+        parser.add_argument("-weeks", type=int)
+        parser.add_argument("-months", type=int)
         try:
             parsed = parser.parse_args(shlex.split(args_str))
         except SystemExit:
@@ -56,7 +55,10 @@ class WarnCommand(CommandBase):
         return True
 
     async def execute(self, msg: aiogram.types.Message):
-        answer_text = f"{self.user.name} gets a warn ({await database_manager.get_user_warn_count(self.user)}/{self.chat.warn_to_ban})\n"
+        answer_text = (
+            f"{self.user.name} gets a warn"
+            f" ({await database_manager.get_user_warn_count(self.user)}/{self.chat.warn_to_ban})\n"
+        )
         answer_text += f"Will be removed in {self.period} minutes\n"
         answer_text += f"Moderator: {self.author.name}\n"
         if self.reason:
@@ -68,5 +70,5 @@ class WarnCommand(CommandBase):
             author=self.author,
             user=self.user,
             until_date=until_date,
-            reason=self.reason
+            reason=self.reason,
         )
