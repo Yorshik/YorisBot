@@ -11,4 +11,4 @@ async def trigger(msg: Message):
     for trigger in triggers:
         if text.lower() == trigger.text.lower():
             await msg.answer(trigger.answer)
-            return
+            return False

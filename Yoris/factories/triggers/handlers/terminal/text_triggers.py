@@ -18,19 +18,12 @@ class TextTrigger(TriggerBase):
         self.answer = None
         self.text = None
         self.type = "text"
+        self.id = None
 
     async def matches(self, msg: aiogram.types.Message) -> bool:
+        text = msg.text.strip()
 
-        chat = await database_manager.get_chat(msg.chat.id)
-        text = msg.text
-
-        # Just await it, no sync_to_async needed
-
-        triggers = await database_manager.get_text_triggers(chat)
-        for trigger in triggers:
-            if text.lower() == trigger.text.lower():
-                await msg.answer(trigger.answer)
-                return False
+        await trigger_checker.trigger(msg)
 
         print("trigger check")
         text = msg.text
@@ -39,7 +32,7 @@ class TextTrigger(TriggerBase):
         not_found = re.search(pattern, text) is None
 
         if not_found:
-            print("Не нашелся триггер")
+            print("Не нашелся команда триггер")
             return False
         print("нашел")
         args = text[len("trigger") :].strip()
@@ -49,8 +42,9 @@ class TextTrigger(TriggerBase):
         group.add_argument("-a", action="store_true")
         group.add_argument("-r", action="store_true")
         parser.add_argument("-type", type=str, required=True)
-        parser.add_argument("-outcome", type=str, required=True)
+        parser.add_argument("-outcome", type=str)
         parser.add_argument("-text", type=str)
+        parser.add_argument("-id", type=int)
         try:
             parsed = parser.parse_args(shlex.split(args))
         except SystemExit:
@@ -59,29 +53,32 @@ class TextTrigger(TriggerBase):
         self.chat = await database_manager.get_chat(msg.chat.id)
         self.text = parsed.text
         self.answer = parsed.outcome
+        self.id = parsed.id if parsed.id else None
 
         extracted_user = await parse_message.extract_user(msg)
 
         if parsed.a:
-            print("added")
-            if not self.answer:
-                await msg.reply(
-                    "Далбаеб если выбрал текст то что я буду писать в ответку!"
-                )
+            if self.answer is None:
+                await msg.reply("даун на чё мне отвечать?")
                 return False
             return True
+        elif parsed.r and (
+            await database_manager.check_trigger_id(self.chat, self.id)
+            or await database_manager.check_trigger_bytext(self.chat, self.answer)
+        ):
 
-        elif parsed.r:
-            print("removed")
+            await database_manager.delete_trigger(
+                chat=self.chat, id=self.id, answer=self.answer
+            )
+
             await msg.reply("команда удалена")
-            await database_manager.delete_trigger(chat=self.chat)
             return False
 
         return True
 
     async def execute(self, msg: aiogram.types.Message):
-        print("balls")
-        await msg.reply("триггер был создан")
         await database_manager.text_trigger(
             chat=self.chat, text=self.text, answer=self.answer
         )
+
+        await msg.reply("триггер был создан")

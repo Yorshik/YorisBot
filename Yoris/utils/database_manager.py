@@ -302,3 +302,21 @@ def text_trigger(chat: yoris_models.Chat, text: str, answer: str):
 @sync_to_async
 def get_text_triggers(chat: yoris_models.Chat):
     return list(yoris_models.TextTrigger.objects.filter(chat=chat))
+
+
+@sync_to_async
+def check_trigger_id(chat: yoris_models.Chat, id: int):
+    return yoris_models.TextTrigger.objects.filter(chat=chat, id=id) is not None
+@sync_to_async
+def check_trigger_bytext(chat: yoris_models.Chat, text: str):
+    return yoris_models.TextTrigger.objects.filter(chat=chat, answer = text) is not None
+
+
+
+@sync_to_async
+def delete_trigger(chat: yoris_models.Chat, id: int | None, answer: str):
+    if id is not None:
+        yoris_models.TextTrigger.objects.filter(chat=chat, id=id).delete()
+    elif not yoris_models.TextTrigger.objects.filter(chat=chat, answer=answer).exists():
+        return
+    yoris_models.TextTrigger.objects.filter(chat=chat, answer=answer).delete()
