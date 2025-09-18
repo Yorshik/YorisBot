@@ -1,14 +1,18 @@
 import aiogram.types
 from aiogram.enums import ContentType
-
 from factories.commands.factory import CommandFactory
 from factories.middlewares.factory import MiddlewareFactory
 import contexts
+from factories.triggers.factory import TriggerFactory
+from factories.triggers.handlers.trigger_checker import trigger
+
 
 class Dispatcher:
     def __init__(self):
+
         self.command_factory = CommandFactory()
         self.middleware_factory = MiddlewareFactory()
+        self.trigger_factory = TriggerFactory()
 
     async def dispatch(self, message: aiogram.types.Message):
         context = self.message_convert_to_context(message)
@@ -32,3 +36,5 @@ class Dispatcher:
         if message.content_type == ContentType.DICE:
             return contexts.DiceContext(message)
 
+            await self.trigger_factory.handle(message)
+            await self.command_factory.handle(message)

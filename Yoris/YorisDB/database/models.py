@@ -36,16 +36,15 @@ class Chat(models.Model):
 
 
 class User(models.Model):
-    MODE_CHOICES = (
-        ("yoris", "yoris coins"),
-        ("chips", "chips for casino")
-    )
+    MODE_CHOICES = (("yoris", "yoris coins"), ("chips", "chips for casino"))
     id = models.BigAutoField(primary_key=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255, null=True)
     username = models.CharField(max_length=255, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    linked_chat = models.ForeignKey("Chat", on_delete=models.SET_NULL, null=True, blank=True)
+    linked_chat = models.ForeignKey(
+        "Chat", on_delete=models.SET_NULL, null=True, blank=True
+    )
     yoris_coin_balance = models.IntegerField(default=0)
     chips_balance = models.IntegerField(default=0)
     mode = models.CharField(max_length=5, choices=MODE_CHOICES, default="yoris")
@@ -66,6 +65,7 @@ class User(models.Model):
             return "https://t.me/" + self.username
         return "tg://openmessage?user_id=" + str(self.id)
 
+
 class ChatMember(models.Model):
     STATUS_CHOICES = (
         ("active", "состоит в чате"),
@@ -85,7 +85,9 @@ class ChatMember(models.Model):
     spouse = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True)
     role_level = models.IntegerField(default=0)
     clan = models.ForeignKey("Clan", on_delete=models.SET_NULL, null=True, blank=True)
-    main_club = models.ForeignKey("Club", on_delete=models.SET_NULL, null=True, blank=True)
+    main_club = models.ForeignKey(
+        "Club", on_delete=models.SET_NULL, null=True, blank=True
+    )
     user = models.ForeignKey("User", on_delete=models.CASCADE, related_name="chats")
     chat = models.ForeignKey("Chat", on_delete=models.CASCADE, related_name="members")
     joined_at = models.DateTimeField(auto_now_add=True)
@@ -96,7 +98,7 @@ class ChatMember(models.Model):
 
     @property
     def name(self):
-        return f'Участник {self.user.name} чата {self.chat.name}'
+        return f"Участник {self.user.name} чата {self.chat.name}"
 
 
 class Credits(models.Model):
@@ -104,13 +106,27 @@ class Credits(models.Model):
         ("system", "система"),
         ("user", "пользователь"),
     )
-    user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="credits")
+    user = models.ForeignKey(
+        "User", on_delete=models.SET_NULL, null=True, blank=True, related_name="credits"
+    )
     return_date = models.DateField()
-    lender_type = models.CharField(max_length=10, choices=LENDER_TYPES_CHOICES, default="system")
-    lender_user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="given_credits")
+    lender_type = models.CharField(
+        max_length=10, choices=LENDER_TYPES_CHOICES, default="system"
+    )
+    lender_user = models.ForeignKey(
+        "User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="given_credits",
+    )
     principal = models.DecimalField(max_digits=18, decimal_places=2)
-    interest_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
-    repaid = models.DecimalField(max_digits=18, decimal_places=2, default=Decimal("0.00"))
+    interest_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal("0.00")
+    )
+    repaid = models.DecimalField(
+        max_digits=18, decimal_places=2, default=Decimal("0.00")
+    )
     issued_at = models.DateTimeField(auto_now_add=True)
     due_at = models.DateTimeField()
 
@@ -121,7 +137,9 @@ class Relation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_main = models.BooleanField(default=False)
     hp = models.IntegerField(default=100)
-    level = models.ForeignKey("RelationLevel", on_delete=models.SET_NULL, null=True, blank=True)
+    level = models.ForeignKey(
+        "RelationLevel", on_delete=models.SET_NULL, null=True, blank=True
+    )
 
 
 class RelationLevel(models.Model):
@@ -132,7 +150,9 @@ class RelationLevel(models.Model):
 
 class Action(models.Model):
     name = models.CharField(max_length=100)
-    required_level = models.ForeignKey("RelationLevel", on_delete=models.CASCADE, related_name="actions")
+    required_level = models.ForeignKey(
+        "RelationLevel", on_delete=models.CASCADE, related_name="actions"
+    )
     cooldown = models.DurationField(null=True, blank=True)
     price = models.PositiveIntegerField(default=0)
 
@@ -174,8 +194,16 @@ class Reward(models.Model):
     ]
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="rewards")
-    by = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="given_rewards")
+    user = models.ForeignKey(
+        "User", on_delete=models.SET_NULL, null=True, blank=True, related_name="rewards"
+    )
+    by = models.ForeignKey(
+        "User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="given_rewards",
+    )
     chat = models.ForeignKey("Chat", on_delete=models.SET_NULL, null=True, blank=True)
     rank = models.CharField(max_length=2, choices=EMOJI_CHOICES, default="🎗")
 
@@ -187,7 +215,13 @@ class Clan(models.Model):
     )
     name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
-    leader = models.OneToOneField("ChatMember", on_delete=models.SET_NULL, null=True, blank=True, related_name="lead_clan")
+    leader = models.OneToOneField(
+        "ChatMember",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="lead_clan",
+    )
     number = models.PositiveIntegerField()
     type = models.CharField(max_length=6, choices=TYPE_CHOICES, default="opened")
     members = models.PositiveIntegerField(default=1)
@@ -198,7 +232,9 @@ class Club(models.Model):
         ("opened", "opened"),
         ("closed", "closed"),
     )
-    leader = models.ForeignKey("ChatMember", on_delete=models.SET_NULL, null=True, blank=True)
+    leader = models.ForeignKey(
+        "ChatMember", on_delete=models.SET_NULL, null=True, blank=True
+    )
     name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     members = models.PositiveIntegerField(default=1)
@@ -239,7 +275,9 @@ class Prefix(models.Model):
 class Activity(models.Model):
     user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True)
     chat = models.ForeignKey("Chat", on_delete=models.SET_NULL, null=True, blank=True)
-    member = models.ForeignKey("ChatMember", on_delete=models.SET_NULL, null=True, blank=True)
+    member = models.ForeignKey(
+        "ChatMember", on_delete=models.SET_NULL, null=True, blank=True
+    )
     timestamp = models.DateTimeField(auto_now_add=True)
 
 
@@ -257,7 +295,9 @@ class Mute(models.Model):
     chat = models.ForeignKey("Chat", on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True)
     until_date = models.DateTimeField(null=True, blank=True)
-    author = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    author = models.ForeignKey(
+        "User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
     reason = models.TextField(null=True, blank=True)
     was_admin = models.BooleanField(default=False)
     tg_admin_title = models.CharField(max_length=255, blank=True, null=True)
@@ -268,5 +308,13 @@ class Warn(models.Model):
     chat = models.ForeignKey("Chat", on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True)
     until_date = models.DateTimeField(null=True, blank=True)
-    author = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    author = models.ForeignKey(
+        "User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
     reason = models.TextField(blank=True, null=True)
+
+
+class TextTrigger(models.Model):
+    chat = models.ForeignKey("Chat", on_delete=models.SET_NULL, null=True, blank=True)
+    text = models.TextField("Text")
+    answer = models.TextField("Answer")

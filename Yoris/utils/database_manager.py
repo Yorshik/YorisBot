@@ -244,7 +244,6 @@ def create_warn(chat, author, user, until_date, reason):
         user=user,
         until_date=until_date,
         reason=reason,
-        warn_id=yoris_models.Warn.objects.filter(user=user).count() + 1,
     )
 
 
@@ -266,57 +265,3 @@ def get_mutes(chat: yoris_models.Chat):
 @sync_to_async
 def get_user_warn_count(user: yoris_models.User):
     return yoris_models.Warn.objects.filter(user=user).count()
-
-
-@sync_to_async
-def delete_warns(chat: yoris_models.Chat, user: yoris_models.User, numbers: list):
-    if not numbers:
-        deleted_warns = yoris_models.Warn.objects.filter(chat=chat, user=user).delete()
-    elif numbers == [-1]:
-        deleted_warns = yoris_models.Warn.objects.filter(chat=chat, user=user).order_by("-warn_id").first().delete()
-    else:
-        deleted_warns = yoris_models.Warn.objects.filter(chat=chat, user=user).filter(warn_id__in=numbers).delete()
-    warns = yoris_models.Warn.objects.filter(chat=chat, user=user).order_by("warn_id")
-    for i, warn in enumerate(warns, start=1):
-        if warn.warn_id != i:
-            warn.warn_id = i
-            warn.save(update_fields=["warn_id"])
-    return deleted_warns[0]
-
-
-@sync_to_async
-def set_warn_period(chat: yoris_models.Chat, period: int):
-    chat.warn_period = period
-    chat.save()
-
-@sync_to_async
-def set_warn_limit(chat: yoris_models.Chat, limit: int):
-    chat.warn_limit = limit
-    chat.save()
-
-
-@sync_to_async
-def get_warns(chat: yoris_models.Chat):
-    return list(yoris_models.Warn.objects.select_related("user", "author").filter(chat=chat).order_by("user", "warn_id"))
-
-
-@sync_to_async
-def get_user_warns(chat: yoris_models.Chat, user: yoris_models.User):
-    return list(yoris_models.Warn.objects.select_related("user", "author").filter(chat=chat, user=user).order_by("warn_id"))
-
-
-@sync_to_async
-def get_users(users: list[int]):
-    return list(yoris_models.User.objects.filter(pk__in=users))
-
-
-@sync_to_async
-def add_cube_stats(chat, player1, player2, winner, loser, is_draw):
-    return yoris_models.CubeActivity.objects.create(
-        chat=chat,
-        player1=player1,
-        player2=player2,
-        winner=winner,
-        loser=loser,
-        is_draw=is_draw,
-    )
