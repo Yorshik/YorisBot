@@ -96,3 +96,37 @@ async def get_user_stats(user, days: int | None = 7) -> BytesIO:
 async def get_chat_member_stats(user, chat, days: int | None = 7) -> BytesIO:
     qs = yoris_models.Activity.objects.filter(chat=chat, user=user)
     return await build_activity_stats(qs, title=f"Статистика участника {user.name} чата {chat.name}", days=days)
+
+
+@sync_to_async
+def get_cubes_stats(chat) -> BytesIO:
+    qs = (
+        yoris_models.CubeActivity.objects
+        .filter(chat=chat)
+        .annotate(day=TruncDate("timestamp"))
+        .values("day")
+        .annotate(count=Count("id"))
+        .order_by("day")
+    )
+    if not qs:
+        buf = BytesIO()
+        plt.figure(figsize=(10, 5))
+        plt.text(0.5, 0.5, "Нет данных", ha='center', va='center')
+        plt.axis('off')
+        plt.savefig(buf, format="png", bbox_inches="tight")
+        plt.close()
+        buf.seek(0)
+        return buf
+    days = [row["day"].strftime("%Y-%m-%d") for row in qs]
+    counts = [row["count"] for row in qs]
+    plt.figure(figsize=(10, 5))
+    plt.bar(days, counts, color="skyblue")
+    plt.title(f"Активность кубов в чате {chat.name}")
+    plt.xlabel("Дата")
+    plt.ylabel("Количество игр")
+    plt.grid(axis="y")
+    buf = BytesIO()
+    plt.savefig(buf, format="png", bbox_inches="tight")
+    plt.close()
+    buf.seek(0)
+    return buf

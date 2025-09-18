@@ -243,6 +243,16 @@ class Activity(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
 
+class CubeActivity(models.Model):
+    chat = models.ForeignKey("Chat", on_delete=models.SET_NULL, null=True, blank=True)
+    winner = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="cube_wins")
+    loser = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="cube_losses")
+    player1 = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    player2 = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    is_draw = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+
 class Mute(models.Model):
     chat = models.ForeignKey("Chat", on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True)

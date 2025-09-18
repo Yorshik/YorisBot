@@ -1,4 +1,3 @@
-import aiogram
 from typing import Type
 from factories.commands.base import CommandBase
 
@@ -15,8 +14,7 @@ class CommandFactory(Factory):
     def register(self, command: Type[CommandBase]):
         self._commands.append(command())
 
-    async def handle(self, msg: aiogram.types.Message):
+    async def handle(self, ctx):
         for command in self._commands:
-            if await command.matches(msg):
-                await command.execute(msg)
-
+            if await command.matches(ctx):
+                await command.execute(ctx)

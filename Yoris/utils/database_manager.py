@@ -303,3 +303,20 @@ def get_warns(chat: yoris_models.Chat):
 @sync_to_async
 def get_user_warns(chat: yoris_models.Chat, user: yoris_models.User):
     return list(yoris_models.Warn.objects.select_related("user", "author").filter(chat=chat, user=user).order_by("warn_id"))
+
+
+@sync_to_async
+def get_users(users: list[int]):
+    return list(yoris_models.User.objects.filter(pk__in=users))
+
+
+@sync_to_async
+def add_cube_stats(chat, player1, player2, winner, loser, is_draw):
+    return yoris_models.CubeActivity.objects.create(
+        chat=chat,
+        player1=player1,
+        player2=player2,
+        winner=winner,
+        loser=loser,
+        is_draw=is_draw,
+    )

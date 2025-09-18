@@ -1,9 +1,8 @@
-import aiogram
-
+import contexts
 
 class CommandBase:
-    async def matches(self, msg: aiogram.types.Message) -> bool:
+    async def matches(self, ctx: contexts.MessageContext) -> bool:
         raise NotImplementedError
 
-    async def execute(self, msg: aiogram.types.Message):
+    async def execute(self, ctx: contexts.MessageContext):
         raise NotImplementedError

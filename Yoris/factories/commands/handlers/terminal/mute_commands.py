@@ -1,8 +1,7 @@
 import argparse
 import datetime
 import shlex
-
-import aiogram
+import contexts
 from aiogram.types import ChatPermissions
 from aiogram.types import MessageEntity
 from utils import parse_message
@@ -22,8 +21,8 @@ class MuteCommand(CommandBase):
         self.was_admin = None
         self.tg_admin_title = None
 
-    async def matches(self, msg: aiogram.types.Message) -> bool:
-        text = msg.text
+    async def matches(self, ctx: contexts.MessageContext) -> bool:
+        text = ctx.text
         if not text.startswith('mute'):
             return False
         args = text[len("mute"):].strip()
@@ -35,12 +34,12 @@ class MuteCommand(CommandBase):
         parser.add_argument('-months', type=int)
         parser.add_argument('-reason', type=str)
         parser.add_argument('--force', action='store_true')
-        parser.add_argument('-user', required=True)
+        parser.add_argument('-user')
         try:
             parsed = parser.parse_args(shlex.split(args))
         except SystemExit:
             return False
-        self.chat = await database_manager.get_chat(msg.chat.id)
+        self.chat = await database_manager.get_chat(ctx.chat.id)
         if not any([parsed.minutes, parsed.hours, parsed.days, parsed.weeks, parsed.months]):
             period = await database_manager.get_mute_period(self.chat)
         else:
@@ -55,25 +54,25 @@ class MuteCommand(CommandBase):
                 period = parsed.weeks * 60 * 24 * 7
             if parsed.months:
                 period = parsed.months * 60 * 24 * 7 * 30
-        extracted_user = await parse_message.extract_user(msg)
-        self.author = await database_manager.get_user(msg.from_user.id)
+        extracted_user = await parse_message.extract_user(ctx)
+        self.author = await database_manager.get_user(ctx.from_user.id)
         self.user = await database_manager.get_user(extracted_user)
         self.force = parsed.force
         self.reason = parsed.reason
         self.period = period
-        member = await bot.get_chat_member(msg.chat.id, msg.from_user.id)
+        member = await bot.get_chat_member(ctx.chat.id, ctx.from_user.id)
         self.was_admin = member.status in ("administrator", "creator")
         self.tg_admin_title = member.custom_title or ""
         return True
 
-    async def execute(self, msg: aiogram.types.Message):
+    async def execute(self, ctx: contexts.MessageContext):
         answer_text = f"{self.user.name} is muted for {self.period} minutes\n"
         if self.reason:
             answer_text += f"Reason: {self.reason}\n"
         if self.force:
             answer_text += f"If this user is an admin - all his messages wil be deleted\n"
         answer_text += f"Moderator: {self.author.name}"
-        await msg.reply(answer_text)
+        await ctx.reply(answer_text)
         until_date = datetime.datetime.now() + datetime.timedelta(minutes=self.period)
         permissions = ChatPermissions(
             can_send_messages=False,
@@ -103,8 +102,8 @@ class UnMuteCommand(CommandBase):
         self.user = None
         self.chat = None
 
-    async def matches(self, msg: aiogram.types.Message) -> bool:
-        text = msg.text
+    async def matches(self, ctx: contexts.MessageContext) -> bool:
+        text = ctx.text
         if not text.startswith('unmute'):
             return False
         args = text[len("unmute"):].strip()
@@ -114,14 +113,14 @@ class UnMuteCommand(CommandBase):
             parsed = parser.parse_args(shlex.split(args))
         except SystemExit:
             return False
-        extracted_user = await parse_message.extract_user(msg)
-        self.author = await database_manager.get_user(msg.from_user.id)
+        extracted_user = await parse_message.extract_user(ctx)
+        self.author = await database_manager.get_user(ctx.from_user.id)
         self.user = await database_manager.get_user(extracted_user)
-        self.chat = await database_manager.get_chat(msg.chat.id)
+        self.chat = await database_manager.get_chat(ctx.chat.id)
         return True
 
-    async def execute(self, msg: aiogram.types.Message):
-        await msg.reply(f"{self.user.name} unmuted.\nModerator: {self.author.name}")
+    async def execute(self, ctx: contexts.MessageContext):
+        await ctx.reply(f"{self.user.name} unmuted.\nModerator: {self.author.name}")
         permissions = ChatPermissions(
             can_send_messages=True,
             can_send_media_messages=True,
@@ -141,8 +140,8 @@ class MutePeriodCommand(CommandBase):
         self.period = None
         self.chat = None
 
-    async def matches(self, msg: aiogram.types.Message) -> bool:
-        text = msg.text
+    async def matches(self, ctx: contexts.MessageContext) -> bool:
+        text = ctx.text
         if not text.startswith('mute-period'):
             return False
         args = text[len("mute-period"):].strip()
@@ -169,24 +168,24 @@ class MutePeriodCommand(CommandBase):
             self.period += parsed.months * 60 * 24 * 7 * 30
         if not self.period:
             return False
-        self.chat = await database_manager.get_chat(msg.chat.id)
+        self.chat = await database_manager.get_chat(ctx.chat.id)
         return True
 
-    async def execute(self, msg: aiogram.types.Message):
+    async def execute(self, ctx: contexts.MessageContext):
         await database_manager.set_mute_period(self.chat, self.period)
-        await msg.reply("New default mute period: {} minutes".format(self.period))
+        await ctx.reply("New default mute period: {} minutes".format(self.period))
 
 
 class MuteListCommand(CommandBase):
-    async def matches(self, msg: aiogram.types.Message) -> bool:
-        text = msg.text
+    async def matches(self, ctx: contexts.MessageContext) -> bool:
+        text = ctx.text
         return text == 'mute-list'
 
-    async def execute(self, msg: aiogram.types.Message):
-        chat = await database_manager.get_chat(msg.chat.id)
+    async def execute(self, ctx: contexts.MessageContext):
+        chat = await database_manager.get_chat(ctx.chat.id)
         mutes = await database_manager.get_mutes(chat)
         if not mutes:
-            await msg.reply("No one is muted")
+            await ctx.reply("No one is muted")
             return
         text = "Mutes of this chat:\n\n"
         for mute in mutes:
@@ -196,7 +195,7 @@ class MuteListCommand(CommandBase):
             if mute.reason:
                 text += f"Reason: {mute.reason}\n"
             text += f"\n"
-        await msg.reply(text)
+        await ctx.reply(text)
 
 
 class MuteCheckCommand(CommandBase):
@@ -204,8 +203,8 @@ class MuteCheckCommand(CommandBase):
         self.user = None
         self.chat = None
 
-    async def matches(self, msg: aiogram.types.Message) -> bool:
-        text = msg.text
+    async def matches(self, ctx: contexts.MessageContext) -> bool:
+        text = ctx.text
         if not text.startswith("mute-check"):
             return False
         args = text[len("mute-check"):].strip()
@@ -217,14 +216,14 @@ class MuteCheckCommand(CommandBase):
             return False
         if not parsed.user:
             return False
-        extracted_user = await parse_message.extract_user(msg)
+        extracted_user = await parse_message.extract_user(ctx)
         user = await database_manager.get_user(extracted_user)
-        chat = await database_manager.get_chat(msg.chat.id)
+        chat = await database_manager.get_chat(ctx.chat.id)
         self.user = user
         self.chat = chat
         return True
 
-    async def execute(self, msg: aiogram.types.Message):
+    async def execute(self, ctx: contexts.MessageContext):
         mute = await database_manager.get_mute(chat=self.chat, user=self.user)
         if not mute:
             text = f"{self.user.name} is not muted"
@@ -236,10 +235,10 @@ class MuteCheckCommand(CommandBase):
                     url=self.user.link
                 )
             ]
-            await msg.reply(text, entities=entities)
+            await ctx.reply(text, entities=entities)
             return
         text = ""
         text += f"{mute.user.name} is muted\n"
         text += f"Expires in {int((mute.until_date - datetime.datetime.now()).total_seconds() / 60)} minutes\n"
         text += f"Muted by {mute.author.name}"
-        await msg.reply(text)
+        await ctx.reply(text)

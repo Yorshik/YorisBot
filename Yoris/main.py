@@ -6,7 +6,7 @@ django.setup()
 
 
 import asyncio
-from aiogram import types
+from aiogram import types, F
 from core.bot import bot, dp
 from core.scheduler import start_scheduler
 from factories import dispatcher

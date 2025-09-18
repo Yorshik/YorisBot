@@ -2,9 +2,7 @@ import argparse
 import shlex
 import datetime
 
-import aiogram
-from platformdirs import user_state_dir
-
+import contexts
 from utils import database_manager
 from utils import parse_message
 from factories.commands.base import CommandBase
@@ -18,8 +16,8 @@ class WarnCommand(CommandBase):
         self.period = None
         self.chat = None
 
-    async def matches(self, msg: aiogram.types.Message) -> bool:
-        text = msg.text
+    async def matches(self, ctx: contexts.MessageContext) -> bool:
+        text = ctx.text
         if not text.startswith('warn'):
             return False
         args_str = text[len('warn'):].strip()
@@ -35,10 +33,10 @@ class WarnCommand(CommandBase):
             parsed = parser.parse_args(shlex.split(args_str))
         except SystemExit:
             return False
-        extracted_user = await parse_message.extract_user(msg)
+        extracted_user = await parse_message.extract_user(ctx)
         self.user = await database_manager.get_user(extracted_user)
-        self.author = await database_manager.get_user(msg.from_user.id)
-        self.chat = await database_manager.get_chat(msg.chat.id)
+        self.author = await database_manager.get_user(ctx.from_user.id)
+        self.chat = await database_manager.get_chat(ctx.chat.id)
         period = 0
         if parsed.minutes:
             period += parsed.minutes
@@ -56,7 +54,7 @@ class WarnCommand(CommandBase):
         self.reason = parsed.reason
         return True
 
-    async def execute(self, msg: aiogram.types.Message):
+    async def execute(self, ctx: contexts.MessageContext):
         until_date = datetime.datetime.now() + datetime.timedelta(minutes=self.period)
         await database_manager.create_warn(
             chat=self.chat,
@@ -70,7 +68,7 @@ class WarnCommand(CommandBase):
         answer_text += f"Moderator: {self.author.name}\n"
         if self.reason:
             answer_text += f"Reason: {self.reason}"
-        await msg.reply(answer_text)
+        await ctx.reply(answer_text)
 
 
 class UnWarnCommand(CommandBase):
@@ -80,8 +78,8 @@ class UnWarnCommand(CommandBase):
         self.author = None
         self.numbers = None
 
-    async def matches(self, msg: aiogram.types.Message) -> bool:
-        text = msg.text
+    async def matches(self, ctx: contexts.MessageContext) -> bool:
+        text = ctx.text
         if not text.startswith('unwarn'):
             return False
         args_str = text[len('unwarn'):].strip()
@@ -95,10 +93,10 @@ class UnWarnCommand(CommandBase):
             parsed = parser.parse_args(shlex.split(args_str))
         except SystemExit:
             return False
-        extracted_user = await parse_message.extract_user(msg)
+        extracted_user = await parse_message.extract_user(ctx)
         self.user = await database_manager.get_user(extracted_user)
-        self.author = await database_manager.get_user(msg.from_user.id)
-        self.chat = await database_manager.get_chat(msg.chat.id)
+        self.author = await database_manager.get_user(ctx.from_user.id)
+        self.chat = await database_manager.get_chat(ctx.chat.id)
         if parsed.number:
             self.numbers = [parsed.number]
         elif parsed.all:
@@ -109,9 +107,9 @@ class UnWarnCommand(CommandBase):
             self.numbers = [-1]
         return True
 
-    async def execute(self, msg: aiogram.types.Message):
+    async def execute(self, ctx: contexts.MessageContext):
         deleted_warns = await database_manager.delete_warns(chat=self.chat, user=self.user, numbers=self.numbers)
-        await msg.reply(f"Deleted warns: {deleted_warns}.\nModerator: {self.author.name}")
+        await ctx.reply(f"Deleted warns: {deleted_warns}.\nModerator: {self.author.name}")
 
 
 class WarnPeriodCommand(CommandBase):
@@ -119,8 +117,8 @@ class WarnPeriodCommand(CommandBase):
         self.period = None
         self.chat = None
 
-    async def matches(self, msg: aiogram.types.Message) -> bool:
-        text = msg.text
+    async def matches(self, ctx: contexts.MessageContext) -> bool:
+        text = ctx.text
         if not text.startswith('warn-period'):
             return False
         args = text[len("warn-period"):].strip()
@@ -147,12 +145,12 @@ class WarnPeriodCommand(CommandBase):
             self.period += parsed.months * 60 * 24 * 7 * 30
         if not self.period:
             return False
-        self.chat = await database_manager.get_chat(msg.chat.id)
+        self.chat = await database_manager.get_chat(ctx.chat.id)
         return True
 
-    async def execute(self, msg: aiogram.types.Message):
+    async def execute(self, ctx: contexts.MessageContext):
         await database_manager.set_warn_period(self.chat, self.period)
-        await msg.reply("New default warn period: {} minutes".format(self.period))
+        await ctx.reply("New default warn period: {} minutes".format(self.period))
 
 
 class WarnLimitCommand(CommandBase):
@@ -160,8 +158,8 @@ class WarnLimitCommand(CommandBase):
         self.limit = None
         self.chat = None
 
-    async def matches(self, msg: aiogram.types.Message) -> bool:
-        text = msg.text
+    async def matches(self, ctx: contexts.MessageContext) -> bool:
+        text = ctx.text
         if not text.startswith('warn-limit'):
             return False
         args = text[len("warn-limit"):].strip()
@@ -172,23 +170,23 @@ class WarnLimitCommand(CommandBase):
         except SystemExit:
             return False
         self.limit = parsed.limit
-        self.chat = await database_manager.get_chat(msg.chat.id)
+        self.chat = await database_manager.get_chat(ctx.chat.id)
         return True
 
-    async def execute(self, msg: aiogram.types.Message):
+    async def execute(self, ctx: contexts.MessageContext):
         await database_manager.set_warn_limit(self.chat, self.limit)
 
 
 class WarnListCommand(CommandBase):
-    async def matches(self, msg: aiogram.types.Message) -> bool:
-        text = msg.text
+    async def matches(self, ctx: contexts.MessageContext) -> bool:
+        text = ctx.text
         return text.startswith("warn-list")
 
-    async def execute(self, msg: aiogram.types.Message):
-        chat = await database_manager.get_chat(msg.chat.id)
+    async def execute(self, ctx: contexts.MessageContext):
+        chat = await database_manager.get_chat(ctx.chat.id)
         warns = await database_manager.get_warns(chat)
         if not warns:
-            await msg.reply("No one is warned")
+            await ctx.reply("No one is warned")
             return
         text = "Warns of this chat:\n\n"
         for warn in warns:
@@ -198,7 +196,7 @@ class WarnListCommand(CommandBase):
             if warn.reason:
                 text += f"Reason: {warn.reason}\n"
             text += f"\n"
-        await msg.reply(text)
+        await ctx.reply(text)
 
 
 class WarnsCheckCommand(CommandBase):
@@ -206,8 +204,8 @@ class WarnsCheckCommand(CommandBase):
         self.user = None
         self.chat = None
 
-    async def matches(self, msg: aiogram.types.Message) -> bool:
-        text = msg.text
+    async def matches(self, ctx: contexts.MessageContext) -> bool:
+        text = ctx.text
         if not text.startswith('warns-check'):
             return False
         args = text[len("warns-check"):].strip()
@@ -220,17 +218,17 @@ class WarnsCheckCommand(CommandBase):
         if not parsed.user:
             print("I AM NOT PARSED")
             return False
-        extracted_user = await parse_message.extract_user(msg)
+        extracted_user = await parse_message.extract_user(ctx)
         user = await database_manager.get_user(extracted_user)
-        chat = await database_manager.get_chat(msg.chat.id)
+        chat = await database_manager.get_chat(ctx.chat.id)
         self.user = user
         self.chat = chat
         return True
 
-    async def execute(self, msg: aiogram.types.Message):
+    async def execute(self, ctx: contexts.MessageContext):
         warns = await database_manager.get_user_warns(self.chat, self.user)
         if not warns:
-            await msg.reply(f"{self.user.name} is not warned")
+            await ctx.reply(f"{self.user.name} is not warned")
             return
         text = f"Warns of {self.user.name}:\n\n"
         for warn in warns:
@@ -238,5 +236,5 @@ class WarnsCheckCommand(CommandBase):
             text += f"Expires in {int((warn.until_date - datetime.datetime.now()).total_seconds() / 60)} minutes\n"
             text += f"Warned by {warn.author.name}\n"
             text += "\n"
-        await msg.reply(text)
+        await ctx.reply(text)
 

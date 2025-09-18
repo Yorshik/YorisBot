@@ -1,7 +1,6 @@
 import argparse
 import datetime
-
-import aiogram
+import contexts
 from aiogram.types import BufferedInputFile
 import shlex
 from utils import database_manager
@@ -14,8 +13,8 @@ class MyStats(CommandBase):
         self.user = None
         self.chat = None
 
-    async def matches(self, msg: aiogram.types.Message) -> bool:
-        text = msg.text
+    async def matches(self, ctx: contexts.MessageContext) -> bool:
+        text = ctx.text
         if not text.startswith('my-stats'):
             return False
         args_str = text[len("my-stats"):].strip()
@@ -28,8 +27,8 @@ class MyStats(CommandBase):
             parsed_args = parser.parse_args(shlex.split(args_str))
         except SystemExit:
             return False
-        self.user = await database_manager.get_user(msg.from_user.id)
-        self.chat = await database_manager.get_chat(msg.chat.id)
+        self.user = await database_manager.get_user(ctx.from_user.id)
+        self.chat = await database_manager.get_chat(ctx.chat.id)
         if parsed_args.all:
             days = (datetime.date.today() - self.user.created_at.date()).days
         else:
@@ -45,8 +44,8 @@ class MyStats(CommandBase):
         self.days = days
         return True
 
-    async def execute(self, msg: aiogram.types.Message):
+    async def execute(self, ctx: contexts.MessageContext):
         buf = await graphics.get_chat_member_stats(self.user, self.chat, days=self.days)
         buf.seek(0)
         photo = BufferedInputFile(buf.getvalue(), "image.png")
-        await msg.reply_photo(photo)
+        await ctx.reply_photo(photo)
