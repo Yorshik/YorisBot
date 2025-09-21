@@ -8,7 +8,7 @@ from factories.middlewares.handlers.update_middleware import UpdateMiddleware
 
 class MiddlewareFactory(Factory):
     def __init__(self):
-        self._middlewares = [UpdateMiddleware(), StatsMiddleware()]
+        self._middlewares: list[MiddlewareBase] = [UpdateMiddleware(), StatsMiddleware()]
 
         # self._auto_register("factories.middlewares.handlers", MiddlewareBase)
 

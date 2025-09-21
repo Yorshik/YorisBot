@@ -2,42 +2,81 @@ import aiogram
 
 
 class User:
-    def __init__(self, user: aiogram.types.User):
-        self.id = user.id
-        self.is_bot = user.is_bot
-        self.first_name = user.first_name
-        self.last_name = user.last_name
-        self.username = user.username
+    def __init__(self, id=None, is_bot=None, first_name=None, last_name=None, username=None):
+        self.id = id
+        self.is_bot = is_bot
+        self.first_name = first_name
+        self.last_name = last_name
+        self.username = username
+
+    @classmethod
+    def from_message(cls, user: aiogram.types.User):
+        obj = cls()
+        obj.id = user.id
+        obj.is_bot = user.is_bot
+        obj.first_name = user.first_name
+        obj.last_name = user.last_name
+        obj.username = user.username
+        return obj
 
     def full_name(self):
         if self.first_name and self.last_name:
             return f"{self.first_name} {self.last_name}"
         return f"{self.username}"
 
+
 class Chat:
-    def __init__(self, chat: aiogram.types.Chat):
-        self.id = chat.id
-        self.type = chat.type
-        self.title = chat.title
-        self.username = chat.username
-        self.first_name = chat.first_name
-        self.last_name = chat.last_name
-        self.is_direct = chat.is_direct_messages
+    def __init__(self, id=None, type=None, title=None, username=None, first_name=None, last_name=None, is_direct=None):
+        self.id = id
+        self.type = type
+        self.title = title
+        self.username = username
+        self.first_name = first_name
+        self.last_name = last_name
+        self.is_direct = is_direct
+        
+    @classmethod
+    def from_message(cls, chat: aiogram.types.Chat):
+        obj = cls()
+        obj.id = chat.id
+        obj.type = chat.type
+        obj.title = chat.title
+        obj.username = chat.username
+        obj.first_name = chat.first_name
+        obj.last_name = chat.last_name
+        obj.is_direct = chat.is_direct_messages
+        return obj
 
 
 class Context:
-    def __init__(self, message: aiogram.types.Message):
-        self.type = message.content_type
-        self.id = message.message_id
-        self.from_user = User(message.from_user)
-        self.chat = Chat(message.chat)
-        self.reply_to_message = message.reply_to_message
-        self.quote = message.quote.text if message.quote else None
-        self.is_via_bot = bool(message.via_bot)
-        self.via_bot = message.via_bot.id if self.is_via_bot else None
-        self.edit_date = message.edit_date
-        self.entities = message.entities
-        self.bot = message.bot
+    def __init__(self, type=None, id=None, from_user=None, chat=None, reply_to_message=None, quote=None, is_via_bot=None, via_bot=None, edit_date=None, entities=None, bot=None):
+        self.type = type
+        self.id = id
+        self.from_user = from_user
+        self.chat = chat
+        self.reply_to_message = reply_to_message
+        self.quote = quote
+        self.is_via_bot = is_via_bot
+        self.via_bot = via_bot
+        self.edit_date = edit_date
+        self.entities = entities
+        self.bot: aiogram.Bot = bot
+
+    @classmethod
+    def from_message(cls, message: aiogram.types.Message):
+        obj = cls()
+        obj.type = message.content_type
+        obj.id = message.message_id
+        obj.from_user = User.from_message(message.from_user)
+        obj.chat = Chat.from_message(message.chat)
+        obj.reply_to_message = message.reply_to_message
+        obj.quote = message.quote.text if message.quote else None
+        obj.is_via_bot = bool(message.via_bot)
+        obj.via_bot = message.via_bot.id if obj.is_via_bot else None
+        obj.edit_date = message.edit_date
+        obj.entities = message.entities
+        obj.bot = message.bot
+        return obj
 
 
 class FileContext:

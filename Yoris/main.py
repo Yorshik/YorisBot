@@ -6,7 +6,7 @@ django.setup()
 
 
 import asyncio
-from aiogram import types, F
+from aiogram import types
 from core.bot import bot, dp
 from core.scheduler import start_scheduler
 from factories import dispatcher
@@ -20,7 +20,6 @@ async def universal_handler(message: types.Message):
 
 
 async def on_startup():
-    print("started up")
     asyncio.create_task(start_scheduler())
 
 

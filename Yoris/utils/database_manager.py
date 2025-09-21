@@ -46,7 +46,7 @@ def update_chat(msg: Message):
 
     updated = {
         "id": chat_id,
-        "name": msg.chat.title,
+        "chat_name": msg.chat.title,
         "username": msg.chat.username,
         "type": msg.chat.type,
     }
@@ -63,14 +63,14 @@ def update_chat(msg: Message):
             }
         else:
             chat_obj = yoris_models.Chat.objects.create(
-                name=updated["name"],
+                chat_name=updated["chat_name"],
                 username=updated["username"],
                 id=chat_id,
                 type=updated["type"],
             )
             cached = model_to_dict(chat_obj)
     else:
-        for field in ["name", "username", "type"]:
+        for field in ["chat_name", "username", "type"]:
             if cached[field] != updated[field]:
                 yoris_models.Chat.objects.filter(id=chat_id).update(**updated)
                 cached.update(updated)
@@ -79,7 +79,6 @@ def update_chat(msg: Message):
 
 @sync_to_async
 def update_user(msg: Message):
-    print("start update_user")
     user_id = msg.from_user.id
     key = f"user:{user_id}"
 
@@ -92,10 +91,8 @@ def update_user(msg: Message):
     cached = cache.get(key)
 
     if not cached:
-        print("not cached")
         user_obj = yoris_models.User.objects.filter(id=user_id).first()
         if user_obj:
-            print("found user")
             cached = {
                 "user_id": user_obj.id,
                 "first_name": user_obj.first_name,
@@ -103,7 +100,6 @@ def update_user(msg: Message):
                 "username": user_obj.username,
             }
         else:
-            print("user not found")
             user_obj = yoris_models.User.objects.create(
                 first_name=updated["first_name"],
                 last_name=updated["last_name"],
@@ -112,12 +108,10 @@ def update_user(msg: Message):
             )
             cached = model_to_dict(user_obj)
     else:
-        print("cached")
         for field in ["first_name", "last_name", "username"]:
             if cached[field] != updated[field]:
                 yoris_models.User.objects.filter(id=user_id).update(**updated)
                 cached.update(updated)
-    print("end update_user")
     cache.set(key, cached, CACHE_TIMEOUT)
 
 
@@ -203,7 +197,6 @@ def get_user(username_id: str | int):
     if isinstance(username_id, int) or (isinstance(username_id, str) and username_id.isdigit()):
         q |= Q(id=username_id)
     q |= Q(username=username_id)
-    print(q)
     return yoris_models.User.objects.filter(q).first()
 
 
@@ -265,3 +258,64 @@ def get_mutes(chat: yoris_models.Chat):
 @sync_to_async
 def get_user_warn_count(user: yoris_models.User):
     return yoris_models.Warn.objects.filter(user=user).count()
+
+
+@sync_to_async
+def get_users(users: list[int]):
+    return list(yoris_models.User.objects.filter(pk__in=users))
+
+
+@sync_to_async
+def add_cube_stats(chat, player1, player2, winner, loser, is_draw):
+    return yoris_models.CubeActivity.objects.create(
+        chat=chat,
+        player1=player1,
+        player2=player2,
+        winner=winner,
+        loser=loser,
+        is_draw=is_draw,
+    )
+
+
+@sync_to_async
+def add_trigger(**kwargs):
+    return yoris_models.Trigger.objects.create(**kwargs)
+
+
+@sync_to_async
+def delete_trigger(key=None, **kwargs):
+    return yoris_models.Trigger.objects.filter(Q(id=key) | Q(name=key), **kwargs).delete()
+
+
+@sync_to_async
+def get_triggers(**kwargs):
+    return list(yoris_models.Trigger.objects.filter(**kwargs))
+
+
+@sync_to_async
+def get_trigger(**kwargs):
+    return yoris_models.Trigger.objects.filter(**kwargs).first()
+
+
+@sync_to_async
+def disable_trigger(key=None, **kwargs):
+    if isinstance(key, str):
+        q = Q(type=key)
+    elif isinstance(key, int):
+        q = Q(id=key)
+    else:
+        raise TypeError(f"Invalid key {key}")
+    trigger = yoris_models.Trigger.objects.filter(q, **kwargs).first()
+    trigger.is_enabled = False
+    trigger.save()
+    return trigger
+
+
+@sync_to_async
+def enable_or_create_trigger(chat: yoris_models.Chat, type: str, **kwargs):
+    trigger, created = yoris_models.Trigger.objects.update_or_create(
+        chat=chat,
+        type=type,
+        defaults={**kwargs, "mode": "static"}
+    )
+    return trigger

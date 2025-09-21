@@ -42,3 +42,8 @@ def get_cubes_stats(chat):
         lines.append(f"{index}. {user.name}. Победы - {w}, Ничьи - {d}, Проигрыши - {l}. Процент победы: {winrate}%")
         index += 1
     return "\n".join(lines)
+
+
+@sync_to_async
+def get_user_info(user, chat):
+    return "Ну я потом сделаю... сейчас вообще не роляет"

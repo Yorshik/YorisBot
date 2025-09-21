@@ -5,5 +5,5 @@ from contexts.message_context import MessageContext
 
 class PinnedMessageContext(Context):
     def __init__(self, message: Message):
-        super().__init__(message)
+        super().from_message(message)
         self.pinned_message = MessageContext(message.pinned_message)

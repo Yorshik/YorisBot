@@ -24,7 +24,7 @@ class Chat(models.Model):
     is_short_info_enabled = models.BooleanField(default=False)
     mute_period = models.IntegerField(default=60)
     warn_period = models.IntegerField(default=60 * 24 * 7)
-    warn_limit = models.IntegerField(default=3)
+    warn_to_ban = models.IntegerField(default=3)
 
     @property
     def name(self):
@@ -314,7 +314,39 @@ class Warn(models.Model):
     reason = models.TextField(blank=True, null=True)
 
 
-class TextTrigger(models.Model):
+class Trigger(models.Model):
+    TYPE_CHOICES = (
+        ("text", "текстовый"),
+        ("contains", "текст содержится в тексте"),
+        ("tag", "тег бота"),
+        ("forbidden_photo", "запрещенное фото"),
+        ("forbidden_video", "запрещенное видео"),
+        ("forbidden_document", "запрещенный документ"),
+        ("forbidden_audio", "запрещенное аудио"),
+        ("forbidden_sticker", "запрещенный стикер"),
+        ("forbidden_link", "запрещенная ссылка"),
+        ("cube", "исход кубов"),
+        ("duel", "исход дуэли"),
+        ("antispam", "антиспам"),
+        ("warns", "исход варнов"),
+        ("caps", "X% капса в соо не менее N символов"),
+        ("reaction", "set reaction")
+    )
+    MODE_CHOICES = (
+        ("dynamic", "динамический"),
+        ("static", "статический"),
+    )
     chat = models.ForeignKey("Chat", on_delete=models.SET_NULL, null=True, blank=True)
-    text = models.TextField("Text")
-    answer = models.TextField("Answer")
+    author = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True)
+    type = models.CharField(max_length=25, choices=TYPE_CHOICES)
+    mode = models.CharField(max_length=10, choices=MODE_CHOICES)
+    is_enabled = models.BooleanField(default=None, null=True, blank=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
+
+    text_income = models.TextField(null=True, blank=True)
+    text_outcome = models.TextField(null=True, blank=True)
+
+    reaction_name = models.CharField(max_length=250, null=True, blank=True)
+    reaction_emoji = models.CharField(max_length=3, null=True, blank=True)
+
+    cube_reaction = models.TextField(null=True, blank=True)

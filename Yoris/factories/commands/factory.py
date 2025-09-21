@@ -1,5 +1,5 @@
 from typing import Type
-from factories.commands.base import CommandBase
+from factories.commands.base import BaseCommand
 
 from factories.factory_base import Factory
 
@@ -8,10 +8,13 @@ class CommandFactory(Factory):
     def __init__(self):
         self._commands = []
 
-        self._auto_register("factories.commands.handlers.friendly", CommandBase)
-        self._auto_register("factories.commands.handlers.terminal", CommandBase)
+        self._auto_register("factories.commands.handlers", BaseCommand, factory_type="command")
+        self._auto_register("factories.commands.handlers.cubes", BaseCommand, factory_type="command")
+        self._auto_register("factories.commands.handlers.mute", BaseCommand, factory_type="command")
+        self._auto_register("factories.commands.handlers.user", BaseCommand, factory_type="command")
+        self._auto_register("factories.commands.handlers.warns", BaseCommand, factory_type="command")
 
-    def register(self, command: Type[CommandBase]):
+    def register(self, command: Type[BaseCommand]):
         self._commands.append(command())
 
     async def handle(self, ctx):

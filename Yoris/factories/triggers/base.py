@@ -1,9 +1,11 @@
-import aiogram
+import contexts
 
 
 class TriggerBase:
-    async def matches(self, msg: aiogram.types.Message) -> bool:
+    factory_type = None
+
+    async def matches(self, ctx: contexts.MessageContext) -> bool:
         raise NotImplementedError
 
-    async def execute(self, msg: aiogram.types.Message):
+    async def execute(self, ctx: contexts.MessageContext):
         raise NotImplementedError

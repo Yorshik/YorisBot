@@ -9,7 +9,6 @@ async def extract_user(ctx: contexts.MessageContext):
                 return ent.user.id
             if ent.type == "mention":
                 username = ctx.text[ent.offset: ent.offset + ent.length]
-                print(username)
                 return username[1:]
     match = re.search(r"@(\d+)", ctx.text)
     if match:
@@ -21,7 +20,6 @@ async def extract_user(ctx: contexts.MessageContext):
 async def extract_chat(ctx: contexts.MessageContext):
     if ctx.entities:
         for ent in ctx.entities:
-            print(ent)
             if ent.type == "mention":
                 return ent.user.id
     match = re.search(r"@(\d+)", ctx.text)
