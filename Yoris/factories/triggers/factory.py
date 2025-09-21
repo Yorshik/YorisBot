@@ -10,6 +10,7 @@ class TriggerCreatorFactory(Factory):
         
         self._auto_register("factories.triggers.handlers.dynamic", TriggerBase, factory_type="trigger")
         self._auto_register("factories.triggers.handlers.static", TriggerBase, factory_type="trigger")
+        self._auto_register("factories.triggers.handlers", TriggerBase, factory_type="trigger")
 
     def register(self, command: Type[TriggerBase]):
         self._triggers.append(command())
