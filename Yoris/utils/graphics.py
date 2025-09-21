@@ -130,4 +130,3 @@ def get_cubes_stats(chat) -> BytesIO:
     plt.close()
     buf.seek(0)
     return buf
-
