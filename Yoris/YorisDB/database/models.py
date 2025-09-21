@@ -14,7 +14,7 @@ class Chat(models.Model):
         ("ru", "Russian"),
     )
     id = models.BigAutoField(primary_key=True)
-    chat_name = models.CharField(max_length=100, db_column="name")
+    chat_name = models.CharField(max_length=100)
     username = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     welcome_message = models.TextField(null=True, blank=True)

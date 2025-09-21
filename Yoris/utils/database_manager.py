@@ -57,7 +57,7 @@ def update_chat(msg: Message):
         if chat_obj:
             cached = {
                 "chat_id": chat_obj.id,
-                "name": chat_obj.name,
+                "chat_name": chat_obj.name,
                 "username": chat_obj.username,
                 "type": chat_obj.type,
             }

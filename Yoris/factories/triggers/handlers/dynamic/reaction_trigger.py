@@ -90,6 +90,8 @@ class ExecutorReactionTrigger(TriggerBase):
         self.trigger_to_execute = None
 
     async def matches(self, ctx: contexts.MessageContext) -> bool:
+        if not ctx.reply_to_message:
+            return False
         self.chat = await database_manager.get_chat(ctx.chat.id)
         self.triggers = await database_manager.get_triggers(chat=self.chat, type="reaction")
         text = ctx.text.strip().lower()

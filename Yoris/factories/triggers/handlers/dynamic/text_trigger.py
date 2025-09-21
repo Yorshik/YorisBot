@@ -12,11 +12,12 @@ class AppendTextTrigger(TriggerBase):
         self.chat = None
         self.outcome = None
         self.income = None
+        self.name = None
 
     async def execute(self, ctx: contexts.MessageContext):
         trigger = await database_manager.add_trigger(chat=self.chat, author=self.author, type="text",
                                                           mode="dynamic", is_enabled=None, text_income=self.income,
-                                                          text_outcome=self.outcome)
+                                                          text_outcome=self.outcome, name=self.name)
         await ctx.reply(_("Trigger was created by {author_name}\nTrigger id: {id}", ctx=ctx, author_name=self.author.name, id=trigger.id))
 
 
@@ -32,6 +33,7 @@ class TerminalAppendTextTrigger(AppendTextTrigger):
         parser.add_argument("-type", type=str, required=True)
         parser.add_argument("-outcome", type=str, required=True)
         parser.add_argument("-income", type=str, required=True)
+        parser.add_argument("-name", type=str)
         try:
             parsed = parser.parse_args(shlex.split(args))
         except SystemExit:
@@ -42,6 +44,8 @@ class TerminalAppendTextTrigger(AppendTextTrigger):
         self.chat = await database_manager.get_chat(ctx.chat.id)
         self.income = parsed.income
         self.outcome = parsed.outcome
+        if parsed.name:
+            self.name = parsed.name
         return True
 
 

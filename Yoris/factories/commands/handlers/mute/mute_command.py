@@ -21,9 +21,7 @@ class MuteCommand(BaseCommand):
         self.tg_admin_title = None
         
     async def execute(self, ctx: contexts.MessageContext):
-        answer_text = _("{name} is muted for {period} minutes\n{reason_part}", ctx=ctx, period=self.period, name=self.user.name, reason_part=f"Reason: {self.reason}" if self.reason else "")
-        answer_text += _("Moderator: {name}", ctx=ctx, name=self.author.name)
-        await ctx.reply(answer_text)
+        answer_text = _("{name} is muted for {period} minutes\n{reason_part}\nModerator: {moderator}", ctx=ctx, period=self.period, name=self.user.name, reason_part=f"Reason: {self.reason}" if self.reason else "", moderator=self.author.name)
         until_date = datetime.datetime.now() + datetime.timedelta(minutes=self.period)
         permissions = ChatPermissions(
             can_send_messages=False,
@@ -40,6 +38,7 @@ class MuteCommand(BaseCommand):
         except aiogram.exceptions.TelegramBadRequest:
             await ctx.reply(_("I can't mute {name} because they are admin.", ctx, name=self.user.name))
         else:
+            await ctx.reply(answer_text)
             await database_manager.create_mute(
                 chat=self.chat,
                 user=self.user,
