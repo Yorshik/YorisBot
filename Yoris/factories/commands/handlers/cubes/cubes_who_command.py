@@ -28,9 +28,6 @@ class TerminalCubesWhoCommand(CubesWhoCommand):
     async def matches(self, ctx: contexts.MessageContext) -> bool:
         if not self.prefix_used(ctx):
             return False
-        extracted_user = await parse_message.extract_user(ctx)
-        if not extracted_user:
-            return False
-        self.author = await database_manager.get_user(extracted_user)
+        self.author = await database_manager.get_user(ctx.from_user.id)
         self.chat = await database_manager.get_chat(ctx.chat.id)
         return True

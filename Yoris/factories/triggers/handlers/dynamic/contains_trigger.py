@@ -1,3 +1,5 @@
+import re
+
 from factories.triggers.base import TriggerBase
 from utils import database_manager
 from utils.i18n import translate as _
@@ -6,22 +8,22 @@ import argparse
 import shlex
 
 
-class AppendReactionTrigger(TriggerBase):
+class AppendContainsTrigger(TriggerBase):
     def __init__(self):
         self.author = None
         self.chat = None
-        self.emoji = None
-        self.reaction_name = None
+        self.outcome = None
+        self.income = None
         self.name = None
 
     async def execute(self, ctx: contexts.MessageContext):
-        trigger = await database_manager.add_trigger(chat=self.chat, author=self.author, type="reaction",
-                                                     mode="dynamic", is_enabled=None, reaction_name=self.reaction_name,
-                                                     reaction_emoji=self.emoji, name=self.name)
+        trigger = await database_manager.add_trigger(chat=self.chat, author=self.author, type="contains",
+                                                          mode="dynamic", is_enabled=None, contains_income=self.income,
+                                                          contains_outcome=self.outcome, name=self.name)
         await ctx.reply(_("Trigger was created by {author_name}\nTrigger id: {id}", ctx=ctx, author_name=self.author.name, id=trigger.id))
 
 
-class TerminalAppendReactionTrigger(AppendReactionTrigger):
+class TerminalAppendContainsTrigger(AppendContainsTrigger):
     factory_type = "trigger"
 
     async def matches(self, ctx: contexts.MessageContext) -> bool:
@@ -31,23 +33,25 @@ class TerminalAppendReactionTrigger(AppendReactionTrigger):
         args = text[len("append-trigger"):].strip()
         parser = argparse.ArgumentParser(prog="append-trigger", add_help=False)
         parser.add_argument("-type", type=str, required=True)
-        parser.add_argument("-reaction-name", type=str, required=True)
-        parser.add_argument("-emoji", type=str, required=True)
+        parser.add_argument("-outcome", type=str, required=True)
+        parser.add_argument("-income", type=str, required=True)
         parser.add_argument("-name", type=str)
         try:
             parsed = parser.parse_args(shlex.split(args))
         except SystemExit:
             return False
-        if parsed.type != "reaction":
+        if parsed.type not in ["contains", "contains"]:
             return False
         self.author = await database_manager.get_user(ctx.from_user.id)
         self.chat = await database_manager.get_chat(ctx.chat.id)
-        self.reaction_name = parsed.reaction_name
-        self.emoji = parsed.emoji
+        self.income = parsed.income
+        self.outcome = parsed.outcome
+        if parsed.name:
+            self.name = parsed.name
         return True
 
 
-class RemoveReactionTrigger(TriggerBase):
+class RemoveContainsTrigger(TriggerBase):
     def __init__(self):
         self.key = None
         self.chat = None
@@ -62,7 +66,7 @@ class RemoveReactionTrigger(TriggerBase):
             await ctx.reply(_("Trigger was not deleted"))
 
 
-class TerminalRemoveReactionTrigger(RemoveReactionTrigger):
+class TerminalRemoveContainsTrigger(RemoveContainsTrigger):
     factory_type = "trigger"
 
     async def matches(self, ctx: contexts.MessageContext) -> bool:
@@ -71,7 +75,7 @@ class TerminalRemoveReactionTrigger(RemoveReactionTrigger):
             return False
         args = text[len("remove-trigger"):].strip()
         parser = argparse.ArgumentParser(prog="remove-trigger", add_help=False)
-        parser.add_argument("-key", required=True)
+        parser.add_argument("-key", type=int, required=True)
         try:
             parsed = parser.parse_args(shlex.split(args))
         except SystemExit:
@@ -81,7 +85,7 @@ class TerminalRemoveReactionTrigger(RemoveReactionTrigger):
         return True
 
 
-class ExecutorReactionTrigger(TriggerBase):
+class ExecutorContainsTrigger(TriggerBase):
     factory_type = "executor"
 
     def __init__(self, chat=None):
@@ -90,17 +94,15 @@ class ExecutorReactionTrigger(TriggerBase):
         self.trigger_to_execute = None
 
     async def matches(self, ctx: contexts.MessageContext) -> bool:
-        if not ctx.reply_to_message:
-            return False
         self.chat = await database_manager.get_chat(ctx.chat.id)
-        self.triggers = await database_manager.get_triggers(chat=self.chat, type="reaction")
+        self.triggers = await database_manager.get_triggers(chat=self.chat, type="contains")
         text = ctx.text.strip().lower()
         for trigger in self.triggers:
-            if trigger.reaction_name.lower() == text:
+            if re.search(rf"\b{re.escape(trigger.contains_income)}\b", text, flags=re.IGNORECASE):
                 self.trigger_to_execute = trigger
                 return True
         self.trigger_to_execute = None
         return False
 
     async def execute(self, ctx: contexts.MessageContext):
-        await ctx.send_reaction(self.trigger_to_execute.reaction_emoji)
+        await ctx.reply(self.trigger_to_execute.contains_outcome)

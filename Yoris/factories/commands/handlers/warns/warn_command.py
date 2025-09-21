@@ -37,7 +37,7 @@ class WarnCommand(BaseCommand):
         )
 
 
-class TerminalWarnCommand(BaseCommand):
+class TerminalWarnCommand(WarnCommand):
     factory_type = "command"
     prefix = "warn"
 

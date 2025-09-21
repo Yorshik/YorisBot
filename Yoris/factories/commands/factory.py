@@ -20,4 +20,5 @@ class CommandFactory(Factory):
     async def handle(self, ctx):
         for command in self._commands:
             if await command.matches(ctx):
+                print(ctx.text, command)
                 await command.execute(ctx)

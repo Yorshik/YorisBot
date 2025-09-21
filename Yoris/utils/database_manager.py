@@ -284,7 +284,13 @@ def add_trigger(**kwargs):
 
 @sync_to_async
 def delete_trigger(key=None, **kwargs):
-    return yoris_models.Trigger.objects.filter(Q(id=key) | Q(name=key), **kwargs).delete()
+    if isinstance(key, str):
+        q = Q(type=key)
+    elif isinstance(key, int):
+        q = Q(id=key)
+    else:
+        raise TypeError(f"Invalid key {key}")
+    return yoris_models.Trigger.objects.filter(q, **kwargs).delete()
 
 
 @sync_to_async

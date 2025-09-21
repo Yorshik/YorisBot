@@ -304,7 +304,6 @@ class Mute(models.Model):
 
 
 class Warn(models.Model):
-    warn_id = models.IntegerField()
     chat = models.ForeignKey("Chat", on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True)
     until_date = models.DateTimeField(null=True, blank=True)
@@ -350,3 +349,10 @@ class Trigger(models.Model):
     reaction_emoji = models.CharField(max_length=3, null=True, blank=True)
 
     cube_reaction = models.TextField(null=True, blank=True)
+
+    contains_income = models.TextField(null=True, blank=True)
+    contains_outcome = models.TextField(null=True, blank=True)
+
+    contains_exactly_income = models.TextField(null=True, blank=True)
+    contains_exactly_outcome = models.TextField(null=True, blank=True)
+

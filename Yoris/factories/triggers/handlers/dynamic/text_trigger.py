@@ -57,7 +57,7 @@ class RemoveTextTrigger(TriggerBase):
         # self.author = None
 
     async def execute(self, ctx: contexts.MessageContext):
-        result = await database_manager.delete_trigger(chat=self.chat, id=self.key)
+        result = await database_manager.delete_trigger(chat=self.chat, key=self.key)
         if result:
             await ctx.reply(_("Trigger successfully was deleted"))
         else:
