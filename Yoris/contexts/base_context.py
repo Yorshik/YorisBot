@@ -1,4 +1,5 @@
 import aiogram
+from aiogram.types import ReactionTypeEmoji
 
 
 class User:
@@ -78,32 +79,60 @@ class Context:
         obj.bot = message.bot
         return obj
 
+    def reply(self, text, **kwargs):
+        return self.bot.send_message(self.chat.id, text, reply_to_message_id=self.id, **kwargs)
 
-class FileContext:
-    def __init__(self, message: aiogram.types.Message):
-        self.caption = message.caption
-        if message.document:
-            file = message.document
-        elif message.audio:
-            file = message.audio
-        elif message.video:
-            file = message.video
-        elif message.animation:
-            file = message.animation
-        elif message.photo:
-            file = message.photo[-1]
-        elif message.sticker:
-            file = message.sticker
-        else:
-            file = None
+    def reply_photo(self, photo, text=None, **kwargs):
+        return self.bot.send_photo(self.chat.id, photo=photo, reply_to_message_id=self.id, caption=text, **kwargs)
+
+    def answer(self, text, **kwargs):
+        return self.bot.send_message(self.chat.id, text, **kwargs)
+
+    def answer_dice(self, emoji=None, **kwargs):
+        return self.bot.send_dice(self.chat.id, emoji=emoji, **kwargs)
+
+    def send_reaction(self, emoji=None, **kwargs):
+        return self.bot.set_message_reaction(self.chat.id, self.reply_to_message.message_id, reaction=[ReactionTypeEmoji(emoji=emoji)], **kwargs)
+
+class FileContext(Context):
+    def __init__(self, file=None, caption=None, **kwargs):
+        super().__init__(**kwargs)
+        self.caption = caption
         if file:
             self.file_id = file.file_id
             self.file_unique_id = file.file_unique_id
             self.file_size = file.file_size
             self.mime_type = file.mime_type
             self.file_name = file.file_name
-        if not isinstance(file, aiogram.types.Document):
-            self.width = file.width
-            self.height = file.height
-        if not isinstance(file, aiogram.types.Document) and not isinstance(file, aiogram.types.PhotoSize) and not isinstance(file, aiogram.types.Sticker):
-            self.duration = file.duration
+            if not isinstance(file, aiogram.types.Document):
+                self.width = file.width
+                self.height = file.height
+            if not isinstance(file, aiogram.types.Document) and not isinstance(file, aiogram.types.PhotoSize) and not isinstance(file, aiogram.types.Sticker):
+                self.duration = file.duration
+
+
+    @classmethod
+    def from_message(cls, message: aiogram.types.Message):
+        obj = super().from_message(message)
+        obj.caption = message.caption
+        file = (
+                message.document or
+                message.audio or
+                message.video or
+                message.animation or
+                (message.photo[-1] if message.photo else None) or
+                message.sticker
+        )
+        if file:
+            obj.file_id = file.file_id
+            obj.file_unique_id = file.file_unique_id
+            obj.file_size = getattr(file, "file_size", None)
+            obj.mime_type = getattr(file, "mime_type", None)
+            obj.file_name = getattr(file, "file_name", None)
+            if hasattr(file, "width"):
+                obj.width = file.width
+            if hasattr(file, "height"):
+                obj.height = file.height
+            if hasattr(file, "duration"):
+                obj.duration = file.duration
+        return obj

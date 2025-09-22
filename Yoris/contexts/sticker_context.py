@@ -3,7 +3,7 @@ from aiogram.types import Message
 from contexts.base_context import Context, FileContext
 
 
-class StickerContext(Context, FileContext):
+class StickerContext(FileContext):
     sticker_set: str
     emoji: str
     def __init__(self, message: Message):

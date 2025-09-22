@@ -4,12 +4,14 @@ from factories.commands.factory import CommandFactory
 from factories.middlewares.factory import MiddlewareFactory
 import contexts
 from factories.triggers.factory import TriggerCreatorFactory, TriggerExecutorFactory
+from factories.media.document.factory import DocumentFactory
 
 
 class Dispatcher:
     def __init__(self):
 
         self.command_factory = CommandFactory()
+        self.document_factory = DocumentFactory()
         self.middleware_factory = MiddlewareFactory()
         self.trigger_creator_factory = TriggerCreatorFactory()
         self.trigger_executor_factory = TriggerExecutorFactory()
@@ -21,12 +23,14 @@ class Dispatcher:
             await self.command_factory.handle(context)
             await self.trigger_creator_factory.handle(context)
             await self.trigger_executor_factory.handle(context)
+        if context.type == ContentType.DOCUMENT:
+            await self.document_factory.handle(context)
 
     def message_convert_to_context(self, message: aiogram.types.Message):
         if message.content_type == ContentType.TEXT:
             return contexts.MessageContext.from_message(message)
         if message.content_type == ContentType.PHOTO or message.content_type == ContentType.AUDIO or message.content_type == ContentType.VIDEO or message.content_type == ContentType.DOCUMENT or message.content_type == ContentType.ANIMATION:
-            return contexts.FileContext(message)
+            return contexts.FileContext.from_message(message)
         if message.content_type == ContentType.STICKER:
             return contexts.StickerContext(message)
         if message.content_type == ContentType.LEFT_CHAT_MEMBER:
